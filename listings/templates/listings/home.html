@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-wrap">
+    <div class="container py-5 py-lg-6">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">DEIN MARKTPLATZ. DEINE ENTDECKUNGEN.</span>
+                <h1 class="display-4 fw-bold mt-3 mb-3">Gute Dinge verdienen<br>ein neues Zuhause.</h1>
+                <p class="lead hero-description mb-4">Entdecke besondere Fundstücke, gib Produkten ein zweites Leben und handle in deiner Nähe.</p>
+                <a href="#anzeigen" class="btn btn-light btn-lg rounded-pill px-4 me-2">Anzeigen ansehen</a>
+                <a href="{% url 'admin:listings_listing_add' %}" class="btn btn-outline-light btn-lg rounded-pill px-4">Anzeige erstellen</a>
+            </div>
+            <div class="col-lg-4">
+                <div class="hero-stat">
+                    <div class="hero-stat-number">{{ listing_count }}</div>
+                    <p class="mb-0">aktive Anzeigen<br>auf Fundplatz</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="container py-5" id="anzeigen">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <p class="eyebrow eyebrow-dark mb-2">NEU ENTDECKEN</p>
+            <h2 class="h2 fw-bold mb-0">Frisch auf Fundplatz</h2>
+        </div>
+        <span class="small text-secondary">Produktdetails und Filter folgen an Tag 2 und 4.</span>
+    </div>
+    <div class="row g-4">
+        {% for listing in listings %}
+            <div class="col-sm-6 col-lg-4">
+                <article class="listing-card h-100">
+                    {% if listing.image %}
+                        <img class="listing-image" src="{{ listing.image.url }}" alt="Bild von {{ listing.title }}" loading="lazy">
+                    {% else %}
+                        <div class="listing-image listing-placeholder" aria-label="Kein Produktbild vorhanden">📦</div>
+                    {% endif %}
+                    <div class="p-3 p-lg-4">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <span class="listing-category">{{ listing.get_category_display }}</span>
+                            <span class="fw-bold text-nowrap">{{ listing.price|floatformat:2 }} €</span>
+                        </div>
+                        <h3 class="h5 fw-semibold mb-2">{{ listing.title }}</h3>
+                        <div class="text-secondary small">{{ listing.get_condition_display }}{% if listing.location %} · {{ listing.location }}{% endif %}</div>
+                    </div>
+                </article>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state text-center px-4 py-5">
+                    <div class="fs-1 mb-3">📦</div>
+                    <h3 class="h5 fw-bold">Noch keine Anzeigen vorhanden</h3>
+                    <p class="text-secondary mb-3">Erstelle deine erste Anzeige über die Verwaltung.</p>
+                    <a class="btn btn-dark rounded-pill px-4" href="{% url 'admin:index' %}">Zur Verwaltung</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Fundplatz – der lokale Marketplace für gebrauchte Schätze.">
+    <title>{% block title %}Fundplatz – Dinge finden statt wegwerfen{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+          crossorigin="anonymous">
+    <link href="{% static 'css/site.css' %}" rel="stylesheet">
+</head>
+<body class="d-flex flex-column min-vh-100">
+<header class="site-header">
+    <nav class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3" aria-label="Hauptnavigation">
+        <a class="brand d-inline-flex align-items-center gap-2 text-decoration-none" href="{% url 'listings:home' %}">
+            <span class="brand-icon">F</span>
+            <span>fundplatz<span class="brand-dot">.</span></span>
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a class="nav-link fw-semibold" href="{% url 'listings:home' %}">Entdecken</a>
+            <a class="btn btn-outline-dark btn-sm rounded-pill px-3" href="{% url 'admin:index' %}">Verwaltung</a>
+        </div>
+    </nav>
+</header>
+<main class="flex-grow-1">
+    {% block content %}{% endblock %}
+</main>
+<footer class="site-footer mt-5 py-4">
+    <div class="container d-flex flex-wrap justify-content-between gap-2">
+        <span>© Fundplatz · Eigenständiges Lernprojekt</span>
+        <span>Phase 1 · Noch ohne KI-Funktionen</span>
+    </div>
+</footer>
+</body>
+</html>

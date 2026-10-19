@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Lokale Daten und Bild-Uploads
+/db.sqlite3
+/media/*
+!/media/.gitkeep
+
+# Umgebung und IDE
+.env
+.vscode/
+.DS_Store
+Thumbs.db

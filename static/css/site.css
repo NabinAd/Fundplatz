@@ -1,0 +1,51 @@
+:root {
+    --ink: #172b2e;
+    --primary: #126d65;
+    --muted: #657576;
+    --border: #e6ece9;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #f9fbfa;
+    color: var(--ink);
+}
+
+.site-header { background: #fff; border-bottom: 1px solid var(--border); }
+.brand { font-weight: 850; font-size: 1.55rem; letter-spacing: -.055em; color: var(--ink); }
+.brand-icon {
+    display: inline-grid; place-items: center; width: 37px; height: 37px;
+    color: #fff; border-radius: 12px; background: var(--primary);
+    font-size: 1.2rem; letter-spacing: 0;
+}
+.brand-dot { color: var(--primary); }
+.nav-link { color: var(--ink); }
+.nav-link:hover { color: var(--primary); }
+.hero-wrap {
+    color: white;
+    background: radial-gradient(circle at 94% 12%, #319385 0, transparent 30%),
+                linear-gradient(115deg, #10594f, #103c40);
+}
+.hero-description { max-width: 640px; color: #d5ece7; }
+.eyebrow { color: #c5e9de; font-size: .75rem; font-weight: 800; letter-spacing: .13em; }
+.eyebrow-dark { color: var(--primary); }
+.hero-stat {
+    max-width: 310px; margin-left: auto; border: 1px solid #ffffff44;
+    border-radius: 22px; background: #ffffff14; padding: 2rem;
+}
+.hero-stat-number { font-size: clamp(3.6rem, 8vw, 5rem); line-height: 1; font-weight: 850; }
+.listing-card { overflow: hidden; background: #fff; border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 5px 24px #173d3610; }
+.listing-image { display: block; width: 100%; height: 205px; object-fit: cover; background: #e4eeea; }
+.listing-placeholder { display: grid; place-items: center; font-size: 3rem; }
+.listing-category { color: var(--primary); font-size: .79rem; font-weight: 750; }
+.empty-state { border: 2px dashed #d6e6df; border-radius: 18px; background: white; }
+.site-footer { background: #f0f5f2; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
+
+@media (max-width: 991px) {
+    .hero-stat { margin-left: 0; }
+}
+@media (max-width: 576px) {
+    .hero-wrap h1 { font-size: 2.25rem; }
+    .brand { font-size: 1.35rem; }
+    .brand-icon { width: 32px; height: 32px; }
+}
