@@ -22,11 +22,28 @@
         <div class="d-flex flex-wrap align-items-center gap-3">
             <a class="nav-link fw-semibold" href="{% url 'listings:home' %}">Startseite</a>
             <a class="nav-link fw-semibold" href="{% url 'listings:listing_list' %}">Alle Anzeigen</a>
-            <a class="btn btn-outline-dark btn-sm rounded-pill px-3" href="{% url 'admin:index' %}">Verwaltung</a>
+            {% if user.is_authenticated %}
+                <a class="nav-link fw-semibold" href="{% url 'listings:my_listings' %}">Meine Anzeigen</a>
+                <a class="btn btn-primary btn-sm rounded-pill px-3" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
+                <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-dark btn-sm rounded-pill px-3">Abmelden</button>
+                </form>
+            {% else %}
+                <a class="btn btn-outline-dark btn-sm rounded-pill px-3" href="{% url 'login' %}">Anmelden</a>
+                <a class="btn btn-primary btn-sm rounded-pill px-3" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
+            {% endif %}
         </div>
     </nav>
 </header>
 <main class="flex-grow-1">
+    {% if messages %}
+        <div class="container pt-3" aria-live="polite">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} mb-2" role="status">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
     {% block content %}{% endblock %}
 </main>
 <footer class="site-footer mt-5 py-4">

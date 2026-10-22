@@ -78,3 +78,8 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Login für die Anzeigenverwaltung (Django-eigene Authentifizierung).
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "/meine-anzeigen/"
+LOGOUT_REDIRECT_URL = "/"

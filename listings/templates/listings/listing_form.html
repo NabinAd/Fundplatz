@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+    <nav class="mb-3" aria-label="Brotkrumennavigation"><a href="{% url 'listings:my_listings' %}">Meine Anzeigen</a> / {{ page_title }}</nav>
+    <div class="editor-panel mx-auto">
+        <h1 class="h2 fw-bold mb-2">{{ page_title }}</h1>
+        <p class="text-secondary mb-4">Pflichtfelder sind mit * gekennzeichnet. Alle Daten werden lokal gespeichert.</p>
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-check mb-3">
+                        {{ field }}
+                        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% else %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
+                        {{ field }}
+                        {% if field.name == 'image' and listing.image %}
+                            <div class="mt-2"><img src="{{ listing.image.url }}" alt="Aktuelles Produktbild" class="editor-preview"></div>
+                        {% endif %}
+                        {% if field.name == 'image' %}<div class="form-text">Optionales Bild, maximal 5 MB.</div>{% endif %}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% if field.errors %}<div class="invalid-feedback d-block">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button type="submit" class="btn btn-primary rounded-pill px-4">{{ submit_label }}</button>
+                <a class="btn btn-outline-dark rounded-pill px-4" href="{% url 'listings:my_listings' %}">Abbrechen</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

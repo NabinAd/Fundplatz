@@ -9,7 +9,7 @@
                 <h1 class="display-4 fw-bold mt-3 mb-3">Gute Dinge verdienen<br>ein neues Zuhause.</h1>
                 <p class="lead hero-description mb-4">Entdecke besondere Fundstücke, gib Produkten ein zweites Leben und handle in deiner Nähe.</p>
                 <a href="{% url 'listings:listing_list' %}" class="btn btn-light btn-lg rounded-pill px-4 me-2 mb-2">Alle Anzeigen ansehen</a>
-                <a href="{% url 'admin:listings_listing_add' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
+                <a href="{% url 'listings:listing_create' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
             </div>
             <div class="col-lg-4">
                 <div class="hero-stat">
@@ -39,8 +39,8 @@
                 <div class="empty-state text-center px-4 py-5">
                     <div class="fs-1 mb-3">📦</div>
                     <h3 class="h5 fw-bold">Noch keine Anzeigen vorhanden</h3>
-                    <p class="text-secondary mb-3">Erstelle deine erste Anzeige über die Verwaltung.</p>
-                    <a class="btn btn-dark rounded-pill px-4" href="{% url 'admin:index' %}">Zur Verwaltung</a>
+                    <p class="text-secondary mb-3">Erstelle deine erste Anzeige direkt auf Fundplatz.</p>
+                    <a class="btn btn-dark rounded-pill px-4" href="{% url 'listings:listing_create' %}">Anzeige erstellen</a>
                 </div>
             </div>
         {% endfor %}

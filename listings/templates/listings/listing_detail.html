@@ -47,6 +47,13 @@
         <div class="description-text">{{ listing.description|linebreaks }}</div>
     </section>
 
+    {% if user.is_authenticated and user.pk == listing.seller_id %}
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <a href="{% url 'listings:listing_update' listing.pk %}" class="btn btn-outline-primary rounded-pill px-4">Meine Anzeige bearbeiten</a>
+            <a href="{% url 'listings:listing_delete' listing.pk %}" class="btn btn-outline-danger rounded-pill px-4">Löschen</a>
+        </div>
+    {% endif %}
+
     <div class="mt-4">
         <a class="btn btn-outline-dark rounded-pill px-4" href="{% url 'listings:listing_list' %}">← Zurück zu allen Anzeigen</a>
     </div>

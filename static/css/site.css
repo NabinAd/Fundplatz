@@ -83,3 +83,13 @@ body {
     .listing-card { transition: none; }
     .listing-card:hover { transform: none; }
 }
+
+/* Tag 3: Anzeigenformulare und Verkäuferverwaltung */
+.btn-primary { --bs-btn-bg: var(--primary); --bs-btn-border-color: var(--primary); --bs-btn-hover-bg: #0d534d; --bs-btn-hover-border-color: #0d534d; }
+.auth-panel, .editor-panel { background: white; border: 1px solid var(--border); border-radius: 20px; padding: clamp(1.4rem, 4vw, 2.4rem); }
+.auth-panel { max-width: 480px; }
+.editor-panel { max-width: 760px; }
+.owner-listing { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 1rem; }
+.owner-thumb { width: 105px; height: 90px; object-fit: cover; border-radius: 12px; background: #e4eeea; flex-shrink: 0; }
+.owner-thumb.listing-placeholder { font-size: 2rem; }
+.editor-preview { width: 150px; height: 110px; object-fit: cover; border-radius: 12px; }

@@ -14,7 +14,7 @@
             <h1 class="display-6 fw-bold mb-1">Alle Anzeigen</h1>
             <p class="text-secondary mb-0">{{ page_obj.paginator.count }} aktive Anzeigen</p>
         </div>
-        <a class="btn btn-dark rounded-pill px-4" href="{% url 'admin:listings_listing_add' %}">+ Anzeige erstellen</a>
+        <a class="btn btn-dark rounded-pill px-4" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
     </div>
 
     <div class="row g-4">

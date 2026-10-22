@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Meine Anzeigen | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><p class="eyebrow eyebrow-dark mb-2">VERWALTUNG</p><h1 class="h2 fw-bold mb-1">Meine Anzeigen</h1>
+            <p class="text-secondary mb-0">Hier findest du auch deine deaktivierten Anzeigen.</p></div>
+        <a href="{% url 'listings:listing_create' %}" class="btn btn-primary rounded-pill px-4">+ Neue Anzeige</a>
+    </div>
+    <div class="d-grid gap-3">
+        {% for listing in listings %}
+            <article class="owner-listing d-flex flex-wrap align-items-center gap-3">
+                {% if listing.image %}
+                    <img class="owner-thumb" src="{{ listing.image.url }}" alt="Bild von {{ listing.title }}">
+                {% else %}
+                    <div class="owner-thumb listing-placeholder" aria-label="Kein Bild">📦</div>
+                {% endif %}
+                <div class="flex-grow-1">
+                    <h2 class="h5 fw-bold mb-1">{{ listing.title }}</h2>
+                    <p class="mb-1">{{ listing.price|floatformat:2 }} € · {{ listing.get_category_display }}</p>
+                    {% if listing.is_active %}
+                        <span class="badge text-bg-success">Aktiv</span>
+                    {% else %}
+                        <span class="badge text-bg-secondary">Deaktiviert</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    {% if listing.is_active %}<a href="{% url 'listings:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-dark">Ansehen</a>{% endif %}
+                    <a href="{% url 'listings:listing_update' listing.pk %}" class="btn btn-sm btn-outline-primary">Bearbeiten</a>
+                    <a href="{% url 'listings:listing_delete' listing.pk %}" class="btn btn-sm btn-outline-danger">Löschen</a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state text-center px-4 py-5">
+                <h2 class="h5">Du hast noch keine Anzeigen erstellt.</h2>
+                <a href="{% url 'listings:listing_create' %}" class="btn btn-primary rounded-pill mt-2">Erste Anzeige erstellen</a>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Anzeige löschen | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+    <div class="editor-panel mx-auto">
+        <h1 class="h2 fw-bold mb-3">Anzeige wirklich löschen?</h1>
+        <p>Du möchtest <strong>{{ listing.title }}</strong> dauerhaft aus der Datenbank entfernen.</p>
+        <p class="text-secondary">Falls du sie nur ausblenden möchtest, bearbeite sie und entferne das Häkchen bei „Anzeige aktiv“.</p>
+        <form method="post" class="d-flex flex-wrap gap-2 mt-4">
+            {% csrf_token %}
+            <button class="btn btn-danger rounded-pill px-4" type="submit">Ja, dauerhaft löschen</button>
+            <a href="{% url 'listings:my_listings' %}" class="btn btn-outline-dark rounded-pill px-4">Abbrechen</a>
+        </form>
+    </div>
+</section>
+{% endblock %}
