@@ -204,7 +204,10 @@ class MarketplaceTag3Tests(TestCase):
         self.client.force_login(self.owner)
         response = self.client.post(reverse("listings:listing_create"), {})
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Dieses Feld ist erforderlich")
+        form = response.context["form"]
+        self.assertIn("title", form.errors)
+        self.assertEqual(form.errors.as_data()["title"][0].code, "required")
+        self.assertContains(response, 'class="invalid-feedback d-block"')
         self.assertEqual(Listing.objects.count(), 0)
 
     def test_negativer_preis_wird_abgelehnt(self):
@@ -341,7 +344,7 @@ class MarketplaceTag4Tests(TestCase):
         fields = {
             "seller": self.seller,
             "title": "Gebrauchtes Fahrrad",
-            "description": "Sehr gut gepflegtes Fahrrad",
+            "description": "Sehr gut gepflegtes Produkt",
             "price": Decimal("150.00"),
             "category": Listing.Category.SPORTS,
             "condition": Listing.Condition.GOOD,
@@ -361,8 +364,11 @@ class MarketplaceTag4Tests(TestCase):
         self.make_listing(title="Gaming Laptop")
         self.make_listing(title="Fahrrad")
         response = self.client.get(self.url, {"q": "LAPTOP"})
-        self.assertContains(response, "Gaming Laptop")
-        self.assertNotContains(response, "Fahrrad")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [listing.title for listing in response.context["page_obj"]],
+            ["Gaming Laptop"],
+        )
 
     def test_suche_nach_beschreibung(self):
         self.make_listing(title="Tisch", description="Aus massiver Eiche")
