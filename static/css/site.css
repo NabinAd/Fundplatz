@@ -97,3 +97,23 @@ body {
 /* Tag 4: Suche, Filter und nutzerfreundliche Formulare */
 .search-panel { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; }
 .hero-search { max-width: 380px; min-width: min(100%, 200px); flex: 1 1 220px; }
+
+/* Tag 5: Tastaturbedienung und lesbare Darstellung auf kleinen Displays */
+.skip-link {
+    position: absolute; top: -100px; left: 1rem; z-index: 1050;
+    background: white; color: var(--ink); border: 2px solid var(--primary);
+    padding: .6rem 1rem; border-radius: .65rem; font-weight: 700;
+}
+.skip-link:focus { top: .75rem; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid #0a756e; outline-offset: 3px;
+}
+.listing-card:focus-within { box-shadow: 0 0 0 3px #126d6533; }
+.owner-listing { overflow-wrap: anywhere; }
+@media (max-width: 576px) {
+    .site-header nav > div { width: 100%; gap: .65rem !important; }
+    .site-header nav .btn { min-height: 38px; }
+    .detail-facts > div { grid-template-columns: 1fr; gap: .15rem; }
+    .owner-thumb { width: 80px; height: 76px; }
+    .search-panel { padding: 1rem; }
+}

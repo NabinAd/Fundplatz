@@ -547,3 +547,104 @@ class MarketplaceTag4Tests(TestCase):
         response = self.client.get(self.url, {"q": "<script>alert(1)</script>"})
         self.assertNotContains(response, "<script>alert(1)</script>")
         self.assertContains(response, "&lt;script&gt;")
+
+
+class MarketplaceTag5Tests(TestCase):
+    """Phase-1-Regressionsprüfungen für den schnellen Anzeigenstatuswechsel."""
+
+    def setUp(self):
+        self.owner = get_user_model().objects.create_user(
+            username="tag5besitzer", password="SicheresPasswort!2026"
+        )
+        self.other = get_user_model().objects.create_user(
+            username="tag5fremd", password="SicheresPasswort!2026"
+        )
+        self.listing = Listing.objects.create(
+            seller=self.owner, title="Test-Gitarre", description="Guter Zustand",
+            price=Decimal("95.00"), category=Listing.Category.OTHER,
+            condition=Listing.Condition.GOOD, is_active=True,
+        )
+        self.url = reverse("listings:listing_toggle_active", args=[self.listing.pk])
+
+    def test_status_button_in_meinen_anzeigen(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(reverse("listings:my_listings"))
+        self.assertContains(response, self.url)
+        self.assertContains(response, "Deaktivieren")
+        self.assertContains(response, 'method="post"')
+
+    def test_status_nur_mit_login(self):
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/?next=", response["Location"])
+        self.listing.refresh_from_db()
+        self.assertTrue(self.listing.is_active)
+
+    def test_status_wechsel_get_ist_unzulaessig(self):
+        self.client.force_login(self.owner)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 405)
+        self.listing.refresh_from_db()
+        self.assertTrue(self.listing.is_active)
+
+    def test_fremder_kann_status_nicht_aendern(self):
+        self.client.force_login(self.other)
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 404)
+        self.listing.refresh_from_db()
+        self.assertTrue(self.listing.is_active)
+
+    def test_deaktivieren_blendet_anzeige_aus(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(self.url)
+        self.assertRedirects(response, reverse("listings:my_listings"))
+        self.listing.refresh_from_db()
+        self.assertFalse(self.listing.is_active)
+        self.assertNotContains(self.client.get(reverse("listings:home")), "Test-Gitarre")
+        self.assertNotContains(
+            self.client.get(reverse("listings:listing_list")), "Test-Gitarre"
+        )
+        self.assertEqual(
+            self.client.get(
+                reverse("listings:listing_detail", args=[self.listing.pk])
+            ).status_code, 404
+        )
+        self.assertContains(
+            self.client.get(reverse("listings:my_listings")), "Test-Gitarre"
+        )
+
+    def test_reaktivieren_zeigt_anzeige_wieder(self):
+        self.client.force_login(self.owner)
+        self.client.post(self.url)
+        response = self.client.get(reverse("listings:my_listings"))
+        self.assertContains(response, "Aktivieren")
+        self.client.post(self.url)
+        self.listing.refresh_from_db()
+        self.assertTrue(self.listing.is_active)
+        self.assertContains(self.client.get(reverse("listings:listing_list")), "Test-Gitarre")
+
+    def test_ohne_csrf_darf_status_nicht_wechseln(self):
+        from django.test import Client
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.owner)
+        response = client.post(self.url)
+        self.assertEqual(response.status_code, 403)
+        self.listing.refresh_from_db()
+        self.assertTrue(self.listing.is_active)
+
+    def test_meine_anzeigen_statuswechsel_loescht_nichts(self):
+        self.client.force_login(self.owner)
+        self.client.post(self.url)
+        self.assertTrue(Listing.objects.filter(pk=self.listing.pk).exists())
+        self.client.post(self.url)
+        self.assertTrue(Listing.objects.filter(pk=self.listing.pk).exists())
+
+    def test_bootstrap_css_wird_lokal_geladen(self):
+        response = self.client.get(reverse("listings:home"))
+        self.assertContains(response, "/static/vendor/bootstrap.min.css")
+        self.assertNotContains(response, "cdn.jsdelivr.net")
+
+    def test_startseite_hat_sprungmarke(self):
+        response = self.client.get(reverse("listings:home"))
+        self.assertContains(response, 'href="#hauptinhalt"')
+        self.assertContains(response, 'id="hauptinhalt"')

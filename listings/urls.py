@@ -12,4 +12,5 @@ urlpatterns = [
     path("anzeigen/<int:pk>/", views.listing_detail, name="listing_detail"),
     path("anzeigen/<int:pk>/bearbeiten/", views.listing_update, name="listing_update"),
     path("anzeigen/<int:pk>/loeschen/", views.listing_delete, name="listing_delete"),
+    path("anzeigen/<int:pk>/status/", views.listing_toggle_active, name="listing_toggle_active"),
 ]

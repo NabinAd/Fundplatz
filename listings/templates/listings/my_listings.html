@@ -26,6 +26,14 @@
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                     {% if listing.is_active %}<a href="{% url 'listings:listing_detail' listing.pk %}" class="btn btn-sm btn-outline-dark">Ansehen</a>{% endif %}
+                    <form method="post" action="{% url 'listings:listing_toggle_active' listing.pk %}" class="d-inline m-0">
+                        {% csrf_token %}
+                        {% if listing.is_active %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="{{ listing.title }} deaktivieren">Deaktivieren</button>
+                        {% else %}
+                            <button type="submit" class="btn btn-sm btn-outline-success" aria-label="{{ listing.title }} aktivieren">Aktivieren</button>
+                        {% endif %}
+                    </form>
                     <a href="{% url 'listings:listing_update' listing.pk %}" class="btn btn-sm btn-outline-primary">Bearbeiten</a>
                     <a href="{% url 'listings:listing_delete' listing.pk %}" class="btn btn-sm btn-outline-danger">Löschen</a>
                 </div>

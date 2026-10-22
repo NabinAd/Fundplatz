@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import ListingFilterForm, ListingForm, SignupForm
 from .models import Listing
@@ -117,6 +118,19 @@ def listing_delete(request, pk):
     return render(request, "listings/listing_confirm_delete.html", {
         "listing": listing
     })
+
+
+@login_required
+@require_POST
+def listing_toggle_active(request, pk):
+    """Nur der Eigentümer darf seine Anzeige per POST aktivieren/deaktivieren."""
+    listing = get_object_or_404(Listing, pk=pk, seller=request.user)
+    listing.is_active = not listing.is_active
+    listing.save(update_fields=["is_active", "updated_at"])
+    messages.success(
+        request, "Anzeige aktiviert." if listing.is_active else "Anzeige deaktiviert."
+    )
+    return redirect("listings:my_listings")
 
 
 # Registrierung für lokale Testnutzer; keine externe E-Mail-Bestätigung im MVP.

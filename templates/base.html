@@ -6,13 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Fundplatz – der lokale Marketplace für gebrauchte Schätze.">
     <title>{% block title %}Fundplatz – Dinge finden statt wegwerfen{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
-          crossorigin="anonymous">
+    <link href="{% static 'vendor/bootstrap.min.css' %}" rel="stylesheet">
     <link href="{% static 'css/site.css' %}" rel="stylesheet">
 </head>
 <body class="d-flex flex-column min-vh-100">
+<a class="skip-link" href="#hauptinhalt">Zum Inhalt springen</a>
 <header class="site-header">
     <nav class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3" aria-label="Hauptnavigation">
         <a class="brand d-inline-flex align-items-center gap-2 text-decoration-none" href="{% url 'listings:home' %}">
@@ -37,7 +35,7 @@
         </div>
     </nav>
 </header>
-<main class="flex-grow-1">
+<main id="hauptinhalt" class="flex-grow-1" tabindex="-1">
     {% if messages %}
         <div class="container pt-3" aria-live="polite">
             {% for message in messages %}

@@ -1,76 +1,48 @@
-# Fundplatz – eigener Marketplace (Phase 1, Tag 3)
+# Fundplatz – Marketplace (Phase 1 abgeschlossen, nach lokaler Abnahme)
 
-Lokale Django-Website mit SQLite-Datenbank. Ohne KI-Funktionen.
+Eigenständiger, responsiver Marketplace auf Basis von Django, SQLite, Django Templates, lokal gebündeltem Bootstrap und Pillow. **Phase 1 enthält keine KI-Agenten.** Entwickelt für lokale Ausführung unter Windows / VS Code; **kein produktionssicheres Hosting-Setup**.
 
-## Voraussetzungen
-
-- Windows 10/11, VS Code und Python 3.12
-- Django und Pillow aus `requirements.txt`
-- Internet für das Bootstrap-CDN, sofern CSS nicht lokal zwischengespeichert wurde
-
-## Vorhandenes Tag-2-Projekt auf Tag 3 aktualisieren
-
-Kopiere die Dateien aus `fundplatz_tag3_update.zip` in den bestehenden Projektordner (dort, wo `manage.py` liegt), und bestätige das Überschreiben. **Die Dateien `db.sqlite3`, `.venv/`, `media/` und `.git/` sind nicht im Update und bleiben erhalten.**
-
-PowerShell in VS Code, im Projektordner:
+## Schnellstart unter Windows (PowerShell)
 
 ```powershell
-.\.venv\Scripts\Activate.ps1
-python manage.py check
-python manage.py test listings
-python manage.py runserver
-```
-
-Wenn `.venv` nicht aktiviert ist, nutze die Python-Exe direkt:
-
-```powershell
+cd C:\Kleinanzeigen
+py -3.12 -m venv .venv                    # nur einmal, falls .venv fehlt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py makemigrations listings   # nur falls 0001_initial.py fehlt
+.\.venv\Scripts\python.exe manage.py migrate
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-Django neu installieren (nur falls notwendig):
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
+Im Browser `http://127.0.0.1:8000/` aufrufen. Die Registrierung erfolgt unter `/registrieren/`; Admin-Zugang über `python manage.py createsuperuser` und `/admin/`.
 
 ## Funktionen
 
-- Startseite `/` und öffentliche Übersicht `/anzeigen/`
-- Aktive Anzeigen öffentlich unter `/anzeigen/<id>/`
-- Anmelden mit vorhandenem Django-User: `/login/`
-- Eigene Anzeigen: `/meine-anzeigen/`
-- Anzeige anlegen: `/anzeigen/neu/`
-- Eigene Anzeige ändern: `/anzeigen/<id>/bearbeiten/`
-- Eigene Anzeige löschen: `/anzeigen/<id>/loeschen/` (POST nach Bestätigung)
-- Abmelden über POST-Formular in der Navigation
-- Django-Admin bleibt unter `/admin/`
+- Anzeigenliste, Detailseiten, optionaler Bild-Upload (bis 5 MB), Preise, Kategorien, Zustand, Versand/Abholung und Verhandlungsbasis
+- Erstellen, Bearbeiten, **Aktivieren/Deaktivieren** und bestätigtes Löschen eigener Anzeigen (Login erforderlich)
+- Suche in Titel und Beschreibung, Kategorie- und Preisfilter, kombinierbar mit Paginierung
+- Registrierung, Anmeldung, Abmeldung; SQLite-Datenbank, Bootstrap-CSS lokal ohne CDN
+- Sicherheitsgrundlagen: Eigentümerprüfung für Änderungen, CSRF-Token bei schreibenden Formularen, Django-Formvalidierung
 
-Nur angemeldete Verkäufer können neue Anzeigen erstellen oder ihre eigenen bearbeiten/löschen. Das Besitzerfeld (`seller`) kommt aus `request.user`, nicht aus Formulardaten. Auch deaktivierte Anzeigen sind unter „Meine Anzeigen“ bearbeitbar. Bilder optional, max. 5 MB.
-
-Falls noch kein Benutzer vorhanden ist: `python manage.py createsuperuser`.
-
-## Tests und Git
+## Tests vor Phasenabschluss
 
 ```powershell
-python manage.py check
-python manage.py test listings
-python manage.py makemigrations --check --dry-run
-
-git status
-git add .
-git commit -m "Phase 1 Tag 3: Anzeigenverwaltung"
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py makemigrations --check --dry-run
+.\.venv\Scripts\python.exe manage.py migrate --check
+.\.venv\Scripts\python.exe manage.py test listings
 ```
 
-Erwartung: 30 Django-Tests erfolgreich. Keine Modelländerungen / neuen Migrationen an Tag 3.
+Stand Tag 5: **64 Django-Tests** in `listings/tests.py`. Die Tests müssen auf deinem PC ausgeführt werden; die bereitgestellten Quelldateien allein bestätigen keinen grünen Testlauf. Weitere manuelle Prüfungen und GitHub-Anleitung: `TAG5_ANLEITUNG.md`.
 
-## Lokale Entwicklungsgrenzen
+## GitHub und Datenschutz
 
-`DEBUG=True`, der Standard-SECRET_KEY und SQLite sind nur für den lokalen Projektbetrieb konfiguriert. Für einen öffentlichen Betrieb wäre zusätzliche Absicherung notwendig. Es gibt noch keine Selbstregistrierung, keine Suche und keine KI-Agenten. Die Produktbilder werden lokal im `media/`-Ordner gespeichert, der absichtlich nicht eingecheckt wird. Beim Löschen einer Anzeige entfernt Django den Datenbankeintrag; bereits hochgeladene Bilddateien können als Datei im Medienordner verbleiben (Aufräumen ist nicht Bestandteil des Tag-3-MVP).
+In `.gitignore` sind `.venv/`, `db.sqlite3`, `.env`, Cache und `media/` ausgeschlossen. **Vor einem öffentlichen Push prüfen**, ob lokale Daten aus älteren Commits noch im Git-Verlauf liegen; eine spätere `.gitignore` entfernt diese nicht rückwirkend. Die initiale Migration `listings/migrations/0001_initial.py` muss eingecheckt sein. **Keine privaten Passwörter, Datenbanken oder hochgeladenen Kundendaten veröffentlichen.**
 
+## Technische Grenzen und Phase 2
 
-## Phase 1, Tag 4: Suche / Filter / Registrierung
+- Die Website nutzt eine lokale Entwicklungs-Konfiguration (`DEBUG=True`, Entwicklungs-`SECRET_KEY`). Nicht unverändert öffentlich hosten! Ein öffentliches Deployment benötigt u. a. HTTPS, sichere Secrets, produktionsgeeigneten Betrieb und eine eigene Sicherheitsprüfung.
+- Bereits hochgeladene Dateien werden bei Anzeige-Löschung nicht automatisch von der Festplatte entfernt. Kein Dateispeicher-Aufräumdienst im Phase-1-MVP.
+- Keine Bezahlfunktion, Echtzeit-Chat, E-Mail-Bestätigung oder AI in Phase 1.
+- Phase 2 implementiert separat den Python-Orchestrator, spezialisierte Agenten und Ollama. Erst Phase 3 verbindet ihn mit Fundplatz.
 
-- Unter `/anzeigen/` kannst du aktive Anzeigen nach Titel/Beschreibung suchen und nach Kategorie und Preis filtern.
-- Unter `/registrieren/` kannst du ein lokales Verkäuferkonto mit Benutzername und Passwort anlegen.
-- Installations- und Testschritte stehen in `TAG4_ANLEITUNG.md`.
-- Es gibt weiterhin **keine KI-Komponenten**.
+Drittanbieter: `static/vendor/bootstrap.min.css` enthält **Bootstrap 5.3.6**, Copyright Bootstrap Authors, **MIT License** (Lizenzhinweis im CSS-Dateikopf). Django und Pillow siehe jeweilige Projektlizenzen.
