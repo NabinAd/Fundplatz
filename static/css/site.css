@@ -49,3 +49,37 @@ body {
     .brand { font-size: 1.35rem; }
     .brand-icon { width: 32px; height: 32px; }
 }
+
+/* Tag 2: Kartenlinks, Detailansicht und barrierearme Darstellung */
+.listing-card { transition: transform .15s ease, box-shadow .15s ease; }
+.listing-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px #173d361b; }
+.listing-link { color: var(--ink); text-decoration: none; }
+.listing-link:hover { color: var(--primary); }
+.listing-link:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+.detail-image {
+    display: block; width: 100%; height: clamp(280px, 42vw, 480px);
+    object-fit: contain; border-radius: 20px; background: #e8f0ed;
+    border: 1px solid var(--border);
+}
+.detail-image.listing-placeholder { font-size: 5rem; }
+.detail-panel {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 20px; padding: clamp(1.5rem, 3vw, 2rem);
+}
+.detail-price { font-size: 2rem; font-weight: 800; color: var(--ink); }
+.detail-facts > div {
+    display: grid; grid-template-columns: minmax(100px, 1fr) 1.6fr;
+    gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border);
+}
+.detail-facts > div:last-child { border-bottom: 0; }
+.detail-facts dt { font-weight: 500; color: var(--muted); }
+.detail-facts dd { margin-bottom: 0; font-weight: 600; overflow-wrap: anywhere; }
+.detail-description {
+    background: #fff; border: 1px solid var(--border); border-radius: 20px;
+    padding: clamp(1.5rem, 3vw, 2rem); overflow-wrap: anywhere;
+}
+.description-text p:last-child { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+    .listing-card { transition: none; }
+    .listing-card:hover { transform: none; }
+}

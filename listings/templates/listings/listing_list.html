@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Alle Anzeigen | Fundplatz{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <nav aria-label="Brotkrumennavigation" class="mb-3">
+        <a href="{% url 'listings:home' %}" class="text-decoration-none">Startseite</a>
+        <span class="text-secondary"> / Alle Anzeigen</span>
+    </nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div>
+            <p class="eyebrow eyebrow-dark mb-2">ENTDECKEN</p>
+            <h1 class="display-6 fw-bold mb-1">Alle Anzeigen</h1>
+            <p class="text-secondary mb-0">{{ page_obj.paginator.count }} aktive Anzeigen</p>
+        </div>
+        <a class="btn btn-dark rounded-pill px-4" href="{% url 'admin:listings_listing_add' %}">+ Anzeige erstellen</a>
+    </div>
+
+    <div class="row g-4">
+        {% for listing in page_obj %}
+            <div class="col-sm-6 col-lg-4">
+                {% include "listings/_listing_card.html" with listing=listing %}
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="empty-state text-center px-4 py-5">
+                    <div class="fs-1 mb-3">📦</div>
+                    <h2 class="h5 fw-bold">Aktuell sind keine Anzeigen verfügbar</h2>
+                    <p class="text-secondary mb-0">Schau später wieder vorbei oder erstelle deine erste Anzeige.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-5 d-flex align-items-center justify-content-center gap-3" aria-label="Seitennavigation">
+            {% if page_obj.has_previous %}
+                <a class="btn btn-outline-dark rounded-pill" href="?page={{ page_obj.previous_page_number }}">← Zurück</a>
+            {% endif %}
+            <span class="small text-secondary">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+                <a class="btn btn-outline-dark rounded-pill" href="?page={{ page_obj.next_page_number }}">Weiter →</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}

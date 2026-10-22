@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ listing.title }} | Fundplatz{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+    <nav class="mb-4" aria-label="Brotkrumennavigation">
+        <a href="{% url 'listings:home' %}" class="text-decoration-none">Startseite</a>
+        <span class="text-secondary"> / </span>
+        <a href="{% url 'listings:listing_list' %}" class="text-decoration-none">Alle Anzeigen</a>
+        <span class="text-secondary"> / {{ listing.title }}</span>
+    </nav>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-7">
+            {% if listing.image %}
+                <img class="detail-image" src="{{ listing.image.url }}" alt="Bild von {{ listing.title }}">
+            {% else %}
+                <div class="detail-image listing-placeholder" role="img" aria-label="Kein Produktbild vorhanden">📦</div>
+            {% endif %}
+        </div>
+        <div class="col-lg-5">
+            <div class="detail-panel">
+                <span class="listing-category">{{ listing.get_category_display }}</span>
+                <h1 class="h2 fw-bold mt-2 mb-3">{{ listing.title }}</h1>
+                <p class="detail-price mb-1">{{ listing.price|floatformat:2 }} €</p>
+                {% if listing.is_negotiable %}
+                    <p class="text-secondary small mb-3">Verhandlungsbasis (VB)</p>
+                {% else %}
+                    <p class="text-secondary small mb-3">Festpreis</p>
+                {% endif %}
+
+                <dl class="detail-facts mb-0">
+                    <div><dt>Zustand</dt><dd>{{ listing.get_condition_display }}</dd></div>
+                    <div><dt>Standort</dt><dd>{{ listing.location|default:"Nicht angegeben" }}</dd></div>
+                    <div><dt>Versand</dt><dd>{% if listing.shipping_available %}Möglich{% else %}Nicht angeboten{% endif %}</dd></div>
+                    <div><dt>Abholung</dt><dd>{% if listing.pickup_available %}Möglich{% else %}Nicht angeboten{% endif %}</dd></div>
+                    <div><dt>Anbieter</dt><dd>{{ listing.seller.get_username }}</dd></div>
+                    <div><dt>Erstellt</dt><dd>{{ listing.created_at|date:"d.m.Y" }}</dd></div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <section class="detail-description mt-4 mt-lg-5">
+        <h2 class="h4 fw-bold mb-3">Beschreibung</h2>
+        <div class="description-text">{{ listing.description|linebreaks }}</div>
+    </section>
+
+    <div class="mt-4">
+        <a class="btn btn-outline-dark rounded-pill px-4" href="{% url 'listings:listing_list' %}">← Zurück zu allen Anzeigen</a>
+    </div>
+</section>
+{% endblock %}

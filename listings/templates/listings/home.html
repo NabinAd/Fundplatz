@@ -8,8 +8,8 @@
                 <span class="eyebrow">DEIN MARKTPLATZ. DEINE ENTDECKUNGEN.</span>
                 <h1 class="display-4 fw-bold mt-3 mb-3">Gute Dinge verdienen<br>ein neues Zuhause.</h1>
                 <p class="lead hero-description mb-4">Entdecke besondere Fundstücke, gib Produkten ein zweites Leben und handle in deiner Nähe.</p>
-                <a href="#anzeigen" class="btn btn-light btn-lg rounded-pill px-4 me-2">Anzeigen ansehen</a>
-                <a href="{% url 'admin:listings_listing_add' %}" class="btn btn-outline-light btn-lg rounded-pill px-4">Anzeige erstellen</a>
+                <a href="{% url 'listings:listing_list' %}" class="btn btn-light btn-lg rounded-pill px-4 me-2 mb-2">Alle Anzeigen ansehen</a>
+                <a href="{% url 'admin:listings_listing_add' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
             </div>
             <div class="col-lg-4">
                 <div class="hero-stat">
@@ -27,26 +27,12 @@
             <p class="eyebrow eyebrow-dark mb-2">NEU ENTDECKEN</p>
             <h2 class="h2 fw-bold mb-0">Frisch auf Fundplatz</h2>
         </div>
-        <span class="small text-secondary">Produktdetails und Filter folgen an Tag 2 und 4.</span>
+        <a class="fw-semibold text-decoration-none link-primary" href="{% url 'listings:listing_list' %}">Alle Anzeigen ansehen →</a>
     </div>
     <div class="row g-4">
         {% for listing in listings %}
             <div class="col-sm-6 col-lg-4">
-                <article class="listing-card h-100">
-                    {% if listing.image %}
-                        <img class="listing-image" src="{{ listing.image.url }}" alt="Bild von {{ listing.title }}" loading="lazy">
-                    {% else %}
-                        <div class="listing-image listing-placeholder" aria-label="Kein Produktbild vorhanden">📦</div>
-                    {% endif %}
-                    <div class="p-3 p-lg-4">
-                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                            <span class="listing-category">{{ listing.get_category_display }}</span>
-                            <span class="fw-bold text-nowrap">{{ listing.price|floatformat:2 }} €</span>
-                        </div>
-                        <h3 class="h5 fw-semibold mb-2">{{ listing.title }}</h3>
-                        <div class="text-secondary small">{{ listing.get_condition_display }}{% if listing.location %} · {{ listing.location }}{% endif %}</div>
-                    </div>
-                </article>
+                {% include "listings/_listing_card.html" with listing=listing %}
             </div>
         {% empty %}
             <div class="col-12">

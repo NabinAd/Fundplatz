@@ -1,0 +1,20 @@
+{# Wird von Startseite und Anzeigenübersicht wiederverwendet. #}
+<article class="listing-card h-100 position-relative">
+    {% if listing.image %}
+        <img class="listing-image" src="{{ listing.image.url }}" alt="Bild von {{ listing.title }}" loading="lazy">
+    {% else %}
+        <div class="listing-image listing-placeholder" aria-label="Kein Produktbild vorhanden">📦</div>
+    {% endif %}
+    <div class="p-3 p-lg-4">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <span class="listing-category">{{ listing.get_category_display }}</span>
+            <span class="fw-bold text-nowrap">{{ listing.price|floatformat:2 }} €</span>
+        </div>
+        <h3 class="h5 fw-semibold mb-2">
+            <a class="listing-link stretched-link" href="{% url 'listings:listing_detail' listing.pk %}">{{ listing.title }}</a>
+        </h3>
+        <div class="text-secondary small">
+            {{ listing.get_condition_display }}{% if listing.location %} · {{ listing.location }}{% endif %}
+        </div>
+    </div>
+</article>
