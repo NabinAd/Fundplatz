@@ -1,0 +1,14 @@
+Fundplatz – letzte Korrektur für Tag 5
+
+Im VS-Code-PowerShell-Terminal:
+
+cd C:\Kleinanzeigen
+Expand-Archive -Path "$env:USERPROFILE\Downloads\fundplatz_tag5_testfix2.zip" -DestinationPath "." -Force
+.\.venv\Scripts\python.exe manage.py test listings
+
+Wenn 64 Tests mit OK abschliessen:
+git add listings/tests.py
+git commit -m "Fix: Suchtest prueft Ergebnisse statt Platzhalter"
+git push
+
+Diese ZIP ersetzt ausschliesslich listings/tests.py; die Datenbank bleibt erhalten.

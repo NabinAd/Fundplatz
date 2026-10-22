@@ -117,3 +117,85 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
     .owner-thumb { width: 80px; height: 76px; }
     .search-panel { padding: 1rem; }
 }
+
+/* Design-Review (Tag 5): bewusst nur Darstellung, keine Backend-Aenderungen */
+.site-header { position: relative; z-index: 20; }
+.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.desktop-nav { justify-content: flex-end; }
+.desktop-nav .btn { white-space: nowrap; }
+
+/* Mobile Navigation ohne Bootstrap-JavaScript */
+.mobile-nav { position: relative; margin-left: auto; }
+.mobile-nav-toggle {
+    display: flex; align-items: center; justify-content: center; gap: .7rem;
+    padding: .58rem .85rem; border: 1px solid var(--border);
+    border-radius: .8rem; background: #fff; color: var(--ink);
+    font-weight: 700; line-height: 1.25; cursor: pointer; list-style: none;
+}
+.mobile-nav-toggle::-webkit-details-marker { display: none; }
+.mobile-nav-toggle::marker { content: ''; }
+.mobile-nav[open] .mobile-nav-toggle { border-color: var(--primary); }
+.mobile-nav-toggle:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.mobile-nav-panel {
+    position: absolute; z-index: 30; top: calc(100% + .7rem); right: 0;
+    width: min(84vw, 310px); padding: .55rem;
+    border: 1px solid var(--border); border-radius: 1rem;
+    background: #fff; box-shadow: 0 18px 45px #173d3628;
+}
+.mobile-nav-panel > a, .mobile-nav-logout {
+    display: block; width: 100%; padding: .72rem .85rem;
+    border: 0; border-radius: .6rem; background: transparent;
+    color: var(--ink); text-align: left; font: inherit;
+    font-weight: 600; text-decoration: none;
+}
+.mobile-nav-panel > a:hover, .mobile-nav-panel > a:focus-visible,
+.mobile-nav-logout:hover, .mobile-nav-logout:focus-visible { background: #edf6f2; color: var(--primary); }
+.mobile-nav-panel .mobile-nav-primary { background: var(--primary); color: #fff; }
+.mobile-nav-panel .mobile-nav-primary:hover, .mobile-nav-panel .mobile-nav-primary:focus-visible { background: #0d534d; color: #fff; }
+.mobile-nav-panel form { margin: 0; }
+.mobile-nav-logout { cursor: pointer; }
+
+/* Hero-Abstand: py-lg-6 ist keine Bootstrap-5.3-Klasse. */
+.hero-container { padding-top: clamp(3.2rem, 6vw, 5.4rem); padding-bottom: clamp(3.2rem, 6vw, 5.4rem); }
+.hero-wrap h1 { max-width: 790px; line-height: 1.14; letter-spacing: -.025em; }
+.hero-search { background: #fff; border: 2px solid transparent; min-height: 46px; }
+.hero-search:focus { border-color: #80cbbd; box-shadow: 0 0 0 .23rem #ffffff45; }
+.hero-wrap .btn { min-height: 44px; }
+
+/* Ruhigeres Kartenraster mit konsistenter Zeilenhoehe. */
+.listing-card { display: flex; flex-direction: column; }
+.listing-card > .p-3 { flex-grow: 1; }
+.listing-card .listing-link {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+    overflow: hidden; overflow-wrap: anywhere;
+}
+.listing-card .listing-image { height: clamp(190px, 19vw, 225px); }
+.listing-category { letter-spacing: .01em; }
+.listing-card .text-nowrap { flex-shrink: 0; }
+
+/* Filter erhalten auf Laptop- und Tablet-Breiten Platz. */
+.search-panel { box-shadow: 0 5px 22px #173d3609; }
+.search-panel .btn { white-space: nowrap; min-height: 39px; }
+.form-control:focus, .form-select:focus {
+    border-color: #54a899; box-shadow: 0 0 0 .2rem #126d651c;
+}
+.owner-actions { margin-left: auto; }
+.detail-panel, .detail-description { box-shadow: 0 5px 22px #173d3608; }
+.detail-panel h1, .detail-description { overflow-wrap: anywhere; }
+
+@media (max-width: 991.98px) {
+    .hero-stat { margin-left: 0; }
+}
+@media (max-width: 767.98px) {
+    .owner-actions {
+        width: 100%; margin-left: 0; margin-top: .1rem;
+        padding-top: .85rem; border-top: 1px solid var(--border);
+    }
+}
+@media (max-width: 575.98px) {
+    .hero-search { width: 100%; max-width: none; }
+    .hero-actions .btn { display: block; width: 100%; margin-right: 0 !important; }
+    .hero-stat { max-width: none; }
+    .listing-card .listing-image { height: 215px; }
+    .site-footer .container { flex-direction: column; }
+}

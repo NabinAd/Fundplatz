@@ -17,7 +17,7 @@
 
     <form method="get" action="{% url 'listings:listing_list' %}" class="search-panel mb-4" aria-label="Anzeigen suchen und filtern">
         <div class="row g-3 align-items-end">
-            <div class="col-12 col-lg-4">
+            <div class="col-12 col-lg-3">
                 <label for="{{ filter_form.q.id_for_label }}" class="form-label fw-semibold">{{ filter_form.q.label }}</label>
                 {{ filter_form.q }}
                 {% for error in filter_form.q.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
@@ -37,7 +37,7 @@
                 {{ filter_form.max_price }}
                 {% for error in filter_form.max_price.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
             </div>
-            <div class="col-12 col-lg-1">
+            <div class="col-12 col-lg-2">
                 <button type="submit" class="btn btn-primary w-100">Suchen</button>
             </div>
         </div>

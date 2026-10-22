@@ -12,12 +12,14 @@
 <body class="d-flex flex-column min-vh-100">
 <a class="skip-link" href="#hauptinhalt">Zum Inhalt springen</a>
 <header class="site-header">
-    <nav class="container d-flex flex-wrap align-items-center justify-content-between gap-3 py-3" aria-label="Hauptnavigation">
+    <nav class="container header-inner py-3" aria-label="Hauptnavigation">
         <a class="brand d-inline-flex align-items-center gap-2 text-decoration-none" href="{% url 'listings:home' %}">
-            <span class="brand-icon">F</span>
+            <span class="brand-icon" aria-hidden="true">F</span>
             <span>fundplatz<span class="brand-dot">.</span></span>
         </a>
-        <div class="d-flex flex-wrap align-items-center gap-3">
+
+        {# Desktop: sichtbare Links. #}
+        <div class="desktop-nav d-none d-lg-flex align-items-center gap-3">
             <a class="nav-link fw-semibold" href="{% url 'listings:home' %}">Startseite</a>
             <a class="nav-link fw-semibold" href="{% url 'listings:listing_list' %}">Alle Anzeigen</a>
             {% if user.is_authenticated %}
@@ -33,6 +35,27 @@
                 <a class="btn btn-primary btn-sm rounded-pill px-3" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
             {% endif %}
         </div>
+
+        {# Mobil: native Details-Navigation, keine JavaScript-Abhängigkeit. #}
+        <details class="mobile-nav d-lg-none">
+            <summary class="mobile-nav-toggle">Menü <span aria-hidden="true">☰</span></summary>
+            <div class="mobile-nav-panel">
+                <a href="{% url 'listings:home' %}">Startseite</a>
+                <a href="{% url 'listings:listing_list' %}">Alle Anzeigen</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'listings:my_listings' %}">Meine Anzeigen</a>
+                    <a class="mobile-nav-primary" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button class="mobile-nav-logout" type="submit">Abmelden</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Anmelden</a>
+                    <a href="{% url 'signup' %}">Registrieren</a>
+                    <a class="mobile-nav-primary" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
+                {% endif %}
+            </div>
+        </details>
     </nav>
 </header>
 <main id="hauptinhalt" class="flex-grow-1" tabindex="-1">

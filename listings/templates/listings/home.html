@@ -2,7 +2,7 @@
 
 {% block content %}
 <section class="hero-wrap">
-    <div class="container py-5 py-lg-6">
+    <div class="container hero-container">
         <div class="row align-items-center g-4">
             <div class="col-lg-8">
                 <span class="eyebrow">DEIN MARKTPLATZ. DEINE ENTDECKUNGEN.</span>
@@ -13,8 +13,10 @@
                     <input id="home-search" name="q" type="search" class="form-control hero-search" placeholder="Was suchst du? z. B. Laptop" maxlength="120">
                     <button class="btn btn-light rounded-pill px-4" type="submit">Suchen</button>
                 </form>
-                <a href="{% url 'listings:listing_list' %}" class="btn btn-light btn-lg rounded-pill px-4 me-2 mb-2">Alle Anzeigen ansehen</a>
-                <a href="{% url 'listings:listing_create' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
+                <div class="hero-actions mt-3">
+                    <a href="{% url 'listings:listing_list' %}" class="btn btn-light btn-lg rounded-pill px-4 me-2 mb-2">Alle Anzeigen ansehen</a>
+                    <a href="{% url 'listings:listing_create' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
+                </div>
             </div>
             <div class="col-lg-4">
                 <div class="hero-stat">
