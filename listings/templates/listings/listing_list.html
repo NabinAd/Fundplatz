@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block title %}Alle Anzeigen | Fundplatz{% endblock %}
-
 {% block content %}
 <section class="container py-5">
     <nav aria-label="Brotkrumennavigation" class="mb-3">
@@ -12,10 +10,44 @@
         <div>
             <p class="eyebrow eyebrow-dark mb-2">ENTDECKEN</p>
             <h1 class="display-6 fw-bold mb-1">Alle Anzeigen</h1>
-            <p class="text-secondary mb-0">{{ page_obj.paginator.count }} aktive Anzeigen</p>
+            <p class="text-secondary mb-0">{{ page_obj.paginator.count }} passende aktive Anzeigen</p>
         </div>
         <a class="btn btn-dark rounded-pill px-4" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
     </div>
+
+    <form method="get" action="{% url 'listings:listing_list' %}" class="search-panel mb-4" aria-label="Anzeigen suchen und filtern">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-4">
+                <label for="{{ filter_form.q.id_for_label }}" class="form-label fw-semibold">{{ filter_form.q.label }}</label>
+                {{ filter_form.q }}
+                {% for error in filter_form.q.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-sm-6 col-lg-3">
+                <label for="{{ filter_form.category.id_for_label }}" class="form-label fw-semibold">{{ filter_form.category.label }}</label>
+                {{ filter_form.category }}
+                {% for error in filter_form.category.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-6 col-sm-3 col-lg-2">
+                <label for="{{ filter_form.min_price.id_for_label }}" class="form-label fw-semibold">{{ filter_form.min_price.label }}</label>
+                {{ filter_form.min_price }}
+                {% for error in filter_form.min_price.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-6 col-sm-3 col-lg-2">
+                <label for="{{ filter_form.max_price.id_for_label }}" class="form-label fw-semibold">{{ filter_form.max_price.label }}</label>
+                {{ filter_form.max_price }}
+                {% for error in filter_form.max_price.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-lg-1">
+                <button type="submit" class="btn btn-primary w-100">Suchen</button>
+            </div>
+        </div>
+        {% if filter_form.non_field_errors %}
+            <div class="alert alert-danger mt-3 mb-0" role="alert">{{ filter_form.non_field_errors }}</div>
+        {% endif %}
+        <div class="mt-3">
+            <a href="{% url 'listings:listing_list' %}" class="small text-decoration-none">Filter zurücksetzen</a>
+        </div>
+    </form>
 
     <div class="row g-4">
         {% for listing in page_obj %}
@@ -25,22 +57,21 @@
         {% empty %}
             <div class="col-12">
                 <div class="empty-state text-center px-4 py-5">
-                    <div class="fs-1 mb-3">📦</div>
+                    <div class="fs-1 mb-3">🔎</div>
                     <h2 class="h5 fw-bold">Aktuell sind keine Anzeigen verfügbar</h2>
-                    <p class="text-secondary mb-0">Schau später wieder vorbei oder erstelle deine erste Anzeige.</p>
+                    <p class="text-secondary mb-0">Ändere deine Suchbegriffe oder Filter – oder schau später wieder vorbei.</p>
                 </div>
             </div>
         {% endfor %}
     </div>
-
     {% if page_obj.paginator.num_pages > 1 %}
         <nav class="mt-5 d-flex align-items-center justify-content-center gap-3" aria-label="Seitennavigation">
             {% if page_obj.has_previous %}
-                <a class="btn btn-outline-dark rounded-pill" href="?page={{ page_obj.previous_page_number }}">← Zurück</a>
+                <a class="btn btn-outline-dark rounded-pill" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">← Zurück</a>
             {% endif %}
             <span class="small text-secondary">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
             {% if page_obj.has_next %}
-                <a class="btn btn-outline-dark rounded-pill" href="?page={{ page_obj.next_page_number }}">Weiter →</a>
+                <a class="btn btn-outline-dark rounded-pill" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Weiter →</a>
             {% endif %}
         </nav>
     {% endif %}

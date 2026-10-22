@@ -326,3 +326,224 @@ class MarketplaceTag3Tests(TestCase):
         response = client.post(reverse("listings:listing_delete", args=[listing.pk]))
         self.assertEqual(response.status_code, 403)
         self.assertTrue(Listing.objects.filter(pk=listing.pk).exists())
+
+
+class MarketplaceTag4Tests(TestCase):
+    """Suche, GET-Filter, Registrierung, Anmeldung und Randfälle (Tag 4)."""
+
+    def setUp(self):
+        self.seller = get_user_model().objects.create_user(
+            username="tag4verkaeufer", password="TestPasswort!2026"
+        )
+        self.url = reverse("listings:listing_list")
+
+    def make_listing(self, **overrides):
+        fields = {
+            "seller": self.seller,
+            "title": "Gebrauchtes Fahrrad",
+            "description": "Sehr gut gepflegtes Fahrrad",
+            "price": Decimal("150.00"),
+            "category": Listing.Category.SPORTS,
+            "condition": Listing.Condition.GOOD,
+        }
+        fields.update(overrides)
+        return Listing.objects.create(**fields)
+
+    def test_leere_suche_zeigt_alle_aktiven_anzeigen(self):
+        self.make_listing(title="Aktives Produkt")
+        self.make_listing(title="Privates Produkt", is_active=False)
+        response = self.client.get(self.url)
+        self.assertContains(response, "Aktives Produkt")
+        self.assertNotContains(response, "Privates Produkt")
+        self.assertEqual(response.context["page_obj"].paginator.count, 1)
+
+    def test_suche_nach_titel_ohne_gross_kleinschreibung(self):
+        self.make_listing(title="Gaming Laptop")
+        self.make_listing(title="Fahrrad")
+        response = self.client.get(self.url, {"q": "LAPTOP"})
+        self.assertContains(response, "Gaming Laptop")
+        self.assertNotContains(response, "Fahrrad")
+
+    def test_suche_nach_beschreibung(self):
+        self.make_listing(title="Tisch", description="Aus massiver Eiche")
+        self.make_listing(title="Stuhl", description="Kunststoff")
+        response = self.client.get(self.url, {"q": "Eiche"})
+        self.assertContains(response, "Tisch")
+        self.assertNotContains(response, "Stuhl")
+
+    def test_suche_blendet_deaktivierte_anzeigen_aus(self):
+        self.make_listing(title="Laptop sichtbar")
+        self.make_listing(title="Laptop verborgen", is_active=False)
+        response = self.client.get(self.url, {"q": "Laptop"})
+        self.assertContains(response, "Laptop sichtbar")
+        self.assertNotContains(response, "Laptop verborgen")
+
+    def test_filter_kategorie(self):
+        self.make_listing(title="Sport-Angebot")
+        self.make_listing(title="Technik-Angebot", category=Listing.Category.ELECTRONICS)
+        response = self.client.get(self.url, {"category": Listing.Category.SPORTS})
+        self.assertContains(response, "Sport-Angebot")
+        self.assertNotContains(response, "Technik-Angebot")
+
+    def test_mindestpreis_inklusive_grenze(self):
+        self.make_listing(title="Genau 150")
+        self.make_listing(title="Nur 50", price=Decimal("50.00"))
+        response = self.client.get(self.url, {"min_price": "150"})
+        self.assertContains(response, "Genau 150")
+        self.assertNotContains(response, "Nur 50")
+
+    def test_hoechstpreis_inklusive_grenze(self):
+        self.make_listing(title="Genau 150")
+        self.make_listing(title="Teuer", price=Decimal("200.00"))
+        response = self.client.get(self.url, {"max_price": "150"})
+        self.assertContains(response, "Genau 150")
+        self.assertNotContains(response, "Teuer")
+
+    def test_alle_filter_kombinieren(self):
+        self.make_listing(title="Fahrrad passend", price=Decimal("80"))
+        self.make_listing(title="Fahrrad zu teuer", price=Decimal("200"))
+        self.make_listing(title="Fahrrad falsch", price=Decimal("80"),
+                          category=Listing.Category.ELECTRONICS)
+        self.make_listing(title="Snowboard", price=Decimal("80"))
+        response = self.client.get(self.url, {
+            "q": "Fahrrad", "category": Listing.Category.SPORTS,
+            "min_price": "50", "max_price": "100",
+        })
+        self.assertContains(response, "Fahrrad passend")
+        for text in ["Fahrrad zu teuer", "Fahrrad falsch", "Snowboard"]:
+            self.assertNotContains(response, text)
+        self.assertEqual(response.context["page_obj"].paginator.count, 1)
+
+    def test_unbekannte_kategorie_ist_ungueltig(self):
+        self.make_listing()
+        response = self.client.get(self.url, {"category": "gibts-nicht"})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("category", response.context["filter_form"].errors)
+        self.assertEqual(response.context["page_obj"].paginator.count, 0)
+
+    def test_negativer_preis_ist_ungueltig(self):
+        self.make_listing()
+        response = self.client.get(self.url, {"min_price": "-1"})
+        self.assertIn("min_price", response.context["filter_form"].errors)
+        self.assertEqual(response.context["page_obj"].paginator.count, 0)
+
+    def test_unlogischer_preisbereich_zeigt_fehler(self):
+        self.make_listing()
+        response = self.client.get(self.url, {"min_price": "200", "max_price": "100"})
+        self.assertContains(response, "Mindestpreis darf nicht größer")
+        self.assertEqual(response.context["page_obj"].paginator.count, 0)
+
+    def test_leeres_suchergebnis(self):
+        self.make_listing()
+        response = self.client.get(self.url, {"q": "nichtvorhanden"})
+        self.assertContains(response, "Aktuell sind keine Anzeigen verfügbar")
+
+    def test_paginierung_behält_filter(self):
+        for nr in range(13):
+            self.make_listing(title=f"Fahrrad Nr {nr}", price=Decimal("90"))
+        response = self.client.get(self.url, {"q": "Fahrrad", "max_price": "100"})
+        self.assertEqual(len(response.context["page_obj"]), 12)
+        self.assertContains(response, "q=Fahrrad")
+        self.assertContains(response, "page=2")
+        second = self.client.get(self.url, {
+            "q": "Fahrrad", "max_price": "100", "page": "2"
+        })
+        self.assertEqual(len(second.context["page_obj"]), 1)
+
+    def test_suche_zeigt_keine_html_tags_als_code(self):
+        self.make_listing(title="Bücher", description="<script>alert(1)</script>")
+        response = self.client.get(self.url, {"q": "script"})
+        self.assertNotContains(response, "<script>")
+
+    def test_startseite_enthaelt_suchfeld(self):
+        response = self.client.get(reverse("listings:home"))
+        self.assertContains(response, 'name="q"')
+
+    def test_registrieren_get_zeigt_formular(self):
+        response = self.client.get(reverse("signup"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Konto erstellen")
+        self.assertContains(response, 'name="password2"')
+
+    def test_registrierung_erstellt_konto_und_meldet_an(self):
+        response = self.client.post(reverse("signup"), {
+            "username": "neuerverkaeufer",
+            "password1": "NeuesSicheresPasswort!2026",
+            "password2": "NeuesSicheresPasswort!2026",
+        })
+        self.assertRedirects(response, reverse("listings:my_listings"))
+        user = get_user_model().objects.get(username="neuerverkaeufer")
+        self.assertTrue(user.check_password("NeuesSicheresPasswort!2026"))
+        self.assertNotEqual(user.password, "NeuesSicheresPasswort!2026")
+        self.assertEqual(self.client.get(reverse("listings:my_listings")).status_code, 200)
+
+    def test_registrierung_lehnt_unterschiedliche_passwoerter_ab(self):
+        response = self.client.post(reverse("signup"), {
+            "username": "vielleicht",
+            "password1": "SicheresPasswort!2026",
+            "password2": "AnderesPasswort!2026",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("password2", response.context["form"].errors)
+        self.assertFalse(get_user_model().objects.filter(username="vielleicht").exists())
+
+    def test_registrierung_lehnt_bereits_vergebenen_namen_ab(self):
+        response = self.client.post(reverse("signup"), {
+            "username": "tag4verkaeufer",
+            "password1": "SicheresPasswort!2026",
+            "password2": "SicheresPasswort!2026",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("username", response.context["form"].errors)
+
+    def test_registrierung_prueft_passwortregeln(self):
+        response = self.client.post(reverse("signup"), {
+            "username": "kurt",
+            "password1": "123",
+            "password2": "123",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("password2", response.context["form"].errors)
+        self.assertFalse(get_user_model().objects.filter(username="kurt").exists())
+
+    def test_angemeldeter_nutzer_nicht_erneut_registrieren(self):
+        self.client.force_login(self.seller)
+        self.assertRedirects(
+            self.client.get(reverse("signup")), reverse("listings:my_listings")
+        )
+
+    def test_registrierung_post_ohne_csrf_wird_abgewiesen(self):
+        from django.test import Client
+        client = Client(enforce_csrf_checks=True)
+        response = client.post(reverse("signup"), {
+            "username": "ohnecsrf",
+            "password1": "SicheresPasswort!2026",
+            "password2": "SicheresPasswort!2026",
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(get_user_model().objects.filter(username="ohnecsrf").exists())
+
+    def test_registrierter_nutzer_kann_eigene_anzeige_erstellen(self):
+        self.client.post(reverse("signup"), {
+            "username": "neueranbieter",
+            "password1": "NeuesSicheresPasswort!2026",
+            "password2": "NeuesSicheresPasswort!2026",
+        })
+        response = self.client.post(reverse("listings:listing_create"), {
+            "title": "Artikel vom neuen Nutzer",
+            "description": "Dies ist ein Testartikel.",
+            "price": "15.00",
+            "category": Listing.Category.OTHER,
+            "condition": Listing.Condition.GOOD,
+            "is_active": "on",
+        })
+        listing = Listing.objects.get(title="Artikel vom neuen Nutzer")
+        self.assertEqual(listing.seller.username, "neueranbieter")
+        self.assertRedirects(
+            response, reverse("listings:listing_detail", args=[listing.pk])
+        )
+
+    def test_suchbegriff_wird_html_sicher_ins_formular_uebernommen(self):
+        response = self.client.get(self.url, {"q": "<script>alert(1)</script>"})
+        self.assertNotContains(response, "<script>alert(1)</script>")
+        self.assertContains(response, "&lt;script&gt;")

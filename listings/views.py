@@ -1,10 +1,12 @@
 """Marketplace-Views: öffentlich lesen, eigene Anzeigen sicher verwalten."""
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import ListingForm
+from .forms import ListingFilterForm, ListingForm, SignupForm
 from .models import Listing
 
 
@@ -17,10 +19,39 @@ def home(request):
 
 
 def listing_list(request):
-    active_listings = Listing.objects.filter(is_active=True)
-    paginator = Paginator(active_listings, 12)
+    """Suche und Filter kombinieren (AND), Titel/Beschreibung als OR."""
+    filter_form = ListingFilterForm(request.GET)
+    listings = Listing.objects.filter(is_active=True)
+    if filter_form.is_valid():
+        filters = filter_form.cleaned_data
+        if filters["q"]:
+            listings = listings.filter(
+                Q(title__icontains=filters["q"])
+                | Q(description__icontains=filters["q"])
+            )
+        if filters["category"]:
+            listings = listings.filter(category=filters["category"])
+        if filters["min_price"] is not None:
+            listings = listings.filter(price__gte=filters["min_price"])
+        if filters["max_price"] is not None:
+            listings = listings.filter(price__lte=filters["max_price"])
+    else:
+        # Ungültige Parameter nicht stillschweigend ignorieren.
+        listings = listings.none()
+
+    paginator = Paginator(listings, 12)
     page_obj = paginator.get_page(request.GET.get("page"))
-    return render(request, "listings/listing_list.html", {"page_obj": page_obj})
+
+    # Nur die vier bekannten Filter auf Folgeseiten mitgeben.
+    query_params = request.GET.copy()
+    for key in list(query_params):
+        if key not in {"q", "category", "min_price", "max_price"}:
+            del query_params[key]
+    return render(request, "listings/listing_list.html", {
+        "page_obj": page_obj,
+        "filter_form": filter_form,
+        "filter_query": query_params.urlencode(),
+    })
 
 
 def listing_detail(request, pk):
@@ -86,3 +117,16 @@ def listing_delete(request, pk):
     return render(request, "listings/listing_confirm_delete.html", {
         "listing": listing
     })
+
+
+# Registrierung für lokale Testnutzer; keine externe E-Mail-Bestätigung im MVP.
+def signup(request):
+    if request.user.is_authenticated:
+        return redirect("listings:my_listings")
+    form = SignupForm(request.POST if request.method == "POST" else None)
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user)
+        messages.success(request, "Dein Konto wurde erstellt. Willkommen bei Fundplatz!")
+        return redirect("listings:my_listings")
+    return render(request, "registration/signup.html", {"form": form})

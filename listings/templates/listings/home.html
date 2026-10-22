@@ -8,6 +8,11 @@
                 <span class="eyebrow">DEIN MARKTPLATZ. DEINE ENTDECKUNGEN.</span>
                 <h1 class="display-4 fw-bold mt-3 mb-3">Gute Dinge verdienen<br>ein neues Zuhause.</h1>
                 <p class="lead hero-description mb-4">Entdecke besondere Fundstücke, gib Produkten ein zweites Leben und handle in deiner Nähe.</p>
+                <form action="{% url 'listings:listing_list' %}" method="get" class="d-flex flex-wrap gap-2 mb-3" role="search">
+                    <label class="visually-hidden" for="home-search">Anzeigen suchen</label>
+                    <input id="home-search" name="q" type="search" class="form-control hero-search" placeholder="Was suchst du? z. B. Laptop" maxlength="120">
+                    <button class="btn btn-light rounded-pill px-4" type="submit">Suchen</button>
+                </form>
                 <a href="{% url 'listings:listing_list' %}" class="btn btn-light btn-lg rounded-pill px-4 me-2 mb-2">Alle Anzeigen ansehen</a>
                 <a href="{% url 'listings:listing_create' %}" class="btn btn-outline-light btn-lg rounded-pill px-4 mb-2">Anzeige erstellen</a>
             </div>

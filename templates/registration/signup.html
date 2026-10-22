@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Registrieren | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+    <div class="auth-panel mx-auto">
+        <h1 class="h2 fw-bold mb-2">Registrieren</h1>
+        <p class="text-secondary mb-4">Erstelle ein kostenloses Konto, um eigene Anzeigen zu verwalten.</p>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                    {% for error in field.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary w-100 rounded-pill mt-2">Konto erstellen</button>
+        </form>
+        <p class="text-secondary text-center mt-3 mb-0">Bereits registriert? <a href="{% url 'login' %}">Anmelden</a></p>
+    </div>
+</section>
+{% endblock %}

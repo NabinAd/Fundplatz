@@ -4,7 +4,7 @@
 <section class="container py-5">
     <div class="auth-panel mx-auto">
         <h1 class="h2 fw-bold mb-2">Anmelden</h1>
-        <p class="text-secondary">Verwende zunächst deinen Django-Superuser von Tag 1.</p>
+        <p class="text-secondary">Melde dich mit deinem Fundplatz-Konto an.</p>
         {% if form.errors %}
             <div class="alert alert-danger" role="alert">Benutzername oder Passwort ist falsch.</div>
         {% endif %}
@@ -23,6 +23,7 @@
             {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
             <button class="btn btn-primary w-100 rounded-pill" type="submit">Anmelden</button>
         </form>
+        <p class="text-secondary text-center mt-3 mb-0">Noch kein Konto? <a href="{% url 'signup' %}">Jetzt registrieren</a></p>
     </div>
 </section>
 {% endblock %}

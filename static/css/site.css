@@ -93,3 +93,7 @@ body {
 .owner-thumb { width: 105px; height: 90px; object-fit: cover; border-radius: 12px; background: #e4eeea; flex-shrink: 0; }
 .owner-thumb.listing-placeholder { font-size: 2rem; }
 .editor-preview { width: 150px; height: 110px; object-fit: cover; border-radius: 12px; }
+
+/* Tag 4: Suche, Filter und nutzerfreundliche Formulare */
+.search-panel { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem; }
+.hero-search { max-width: 380px; min-width: min(100%, 200px); flex: 1 1 220px; }

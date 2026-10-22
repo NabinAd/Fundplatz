@@ -66,3 +66,11 @@ Erwartung: 30 Django-Tests erfolgreich. Keine Modelländerungen / neuen Migratio
 ## Lokale Entwicklungsgrenzen
 
 `DEBUG=True`, der Standard-SECRET_KEY und SQLite sind nur für den lokalen Projektbetrieb konfiguriert. Für einen öffentlichen Betrieb wäre zusätzliche Absicherung notwendig. Es gibt noch keine Selbstregistrierung, keine Suche und keine KI-Agenten. Die Produktbilder werden lokal im `media/`-Ordner gespeichert, der absichtlich nicht eingecheckt wird. Beim Löschen einer Anzeige entfernt Django den Datenbankeintrag; bereits hochgeladene Bilddateien können als Datei im Medienordner verbleiben (Aufräumen ist nicht Bestandteil des Tag-3-MVP).
+
+
+## Phase 1, Tag 4: Suche / Filter / Registrierung
+
+- Unter `/anzeigen/` kannst du aktive Anzeigen nach Titel/Beschreibung suchen und nach Kategorie und Preis filtern.
+- Unter `/registrieren/` kannst du ein lokales Verkäuferkonto mit Benutzername und Passwort anlegen.
+- Installations- und Testschritte stehen in `TAG4_ANLEITUNG.md`.
+- Es gibt weiterhin **keine KI-Komponenten**.
