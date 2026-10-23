@@ -97,3 +97,18 @@ class SignupForm(UserCreationForm):
                 field.widget.attrs["autocomplete"] = "new-password"
             elif name == "password2":
                 field.widget.attrs["autocomplete"] = "new-password"
+
+
+class CustomerInquiryForm(forms.Form):
+    """Käuferfrage, keine Eingabemöglichkeit für Seller/Status/Preisregeln."""
+
+    message = forms.CharField(
+        label="Deine Frage an den Verkäufer",
+        min_length=5,
+        max_length=2000,
+        strip=True,
+        widget=forms.Textarea(attrs={
+            "class": "form-control", "rows": 4,
+            "placeholder": "z. B. Ist Versand möglich und wäre der Preis verhandelbar?",
+        }),
+    )

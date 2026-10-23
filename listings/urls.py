@@ -14,3 +14,8 @@ urlpatterns = [
     path("anzeigen/<int:pk>/loeschen/", views.listing_delete, name="listing_delete"),
     path("anzeigen/<int:pk>/status/", views.listing_toggle_active, name="listing_toggle_active"),
 ]
+
+urlpatterns += [
+    path("anzeigen/<int:pk>/anfrage/", views.inquiry_submit, name="inquiry_submit"),
+    path("anfragen/", views.seller_inquiries, name="seller_inquiries"),
+]

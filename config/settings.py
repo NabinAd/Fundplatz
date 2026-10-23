@@ -83,3 +83,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "/meine-anzeigen/"
 LOGOUT_REDIRECT_URL = "/"
+
+# Phase 3/Tag 16: zunächst offline sicher testen. Für lokales Qwen im Terminal
+# $env:FUNDPLATZ_AGENT_USE_LLM="1" setzen und den Django-Server neu starten.
+# Die Django-Integration bleibt synchron (lokale Entwicklung, kein Production-Worker).
+FUNDPLATZ_AGENT_USE_LLM = os.getenv("FUNDPLATZ_AGENT_USE_LLM", "0") == "1"

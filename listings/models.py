@@ -57,3 +57,38 @@ class Listing(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CustomerInquiry(models.Model):
+    """Private Kundenanfrage mit Entwurf; keine gesendete Verkäuferantwort."""
+
+    class Status(models.TextChoices):
+        REVIEW_REQUIRED = "review_required", "Verkäuferprüfung erforderlich"
+        NEEDS_ATTENTION = "needs_attention", "Manuelle Bearbeitung erforderlich"
+
+    listing = models.ForeignKey(
+        Listing, on_delete=models.CASCADE, related_name="customer_inquiries",
+        verbose_name="Anzeige",
+    )
+    buyer = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="customer_inquiries", verbose_name="Interessent",
+    )
+    message = models.TextField("Kundenfrage", max_length=2000)
+    private_draft = models.TextField("Privater Antwortentwurf", blank=True)
+    status = models.CharField(
+        "Bearbeitungsstatus", max_length=24, choices=Status.choices,
+        default=Status.NEEDS_ATTENTION,
+    )
+    route_source = models.CharField("Routerquelle", max_length=12, blank=True)
+    selected_agents = models.JSONField("Ausgewählte Agenten", default=list, blank=True)
+    audit = models.JSONField("Prüfhinweise", default=list, blank=True)
+    created_at = models.DateTimeField("Erstellt", auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Kundenanfrage"
+        verbose_name_plural = "Kundenanfragen"
+
+    def __str__(self):
+        return f"Anfrage #{self.pk} zu {self.listing_id}"

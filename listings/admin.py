@@ -18,3 +18,20 @@ class ListingAdmin(admin.ModelAdmin):
         if not change:
             obj.seller = request.user
         super().save_model(request, obj, form, change)
+
+
+from .models import CustomerInquiry
+
+
+@admin.register(CustomerInquiry)
+class CustomerInquiryAdmin(admin.ModelAdmin):
+    list_display = ("id", "listing", "buyer", "status", "route_source", "created_at")
+    list_filter = ("status", "route_source")
+    search_fields = ("message", "listing__title", "buyer__username")
+    readonly_fields = (
+        "listing", "buyer", "message", "private_draft", "status",
+        "route_source", "selected_agents", "audit", "created_at",
+    )
+
+    def has_add_permission(self, request):
+        return False

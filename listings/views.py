@@ -1,14 +1,19 @@
 """Marketplace-Views: öffentlich lesen, eigene Anzeigen sicher verwalten."""
+import logging
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import ListingFilterForm, ListingForm, SignupForm
-from .models import Listing
+from .forms import CustomerInquiryForm, ListingFilterForm, ListingForm, SignupForm
+from .models import CustomerInquiry, Listing
 
 
 def home(request):
@@ -59,7 +64,9 @@ def listing_detail(request, pk):
     listing = get_object_or_404(
         Listing.objects.select_related("seller"), pk=pk, is_active=True
     )
-    return render(request, "listings/listing_detail.html", {"listing": listing})
+    return render(request, "listings/listing_detail.html", {
+        "listing": listing, "inquiry_form": CustomerInquiryForm(),
+    })
 
 
 # Auch deaktivierte eigene Anzeigen erscheinen in dieser Verwaltung.
@@ -144,3 +151,77 @@ def signup(request):
         messages.success(request, "Dein Konto wurde erstellt. Willkommen bei Fundplatz!")
         return redirect("listings:my_listings")
     return render(request, "registration/signup.html", {"form": form})
+
+
+# Phase 3, Tag 16. Die Frage wird nur gespeichert; sie wird NICHT versendet.
+logger = logging.getLogger(__name__)
+
+
+@login_required
+@require_POST
+def inquiry_submit(request, pk):
+    """Ein Käufer stellt eine Frage. Private Agentenantwort bleibt beim Verkäufer."""
+    listing = get_object_or_404(Listing, pk=pk, is_active=True)
+    if listing.seller_id == request.user.pk:
+        messages.error(request, "Du kannst deine eigene Anzeige nicht anfragen.")
+        return redirect("listings:listing_detail", pk=pk)
+
+    form = CustomerInquiryForm(request.POST)
+    if not form.is_valid():
+        return render(request, "listings/listing_detail.html", {
+            "listing": listing, "inquiry_form": form,
+        }, status=400)
+
+    # Einfaches Limit gegen versehentliches oder massenhaftes Absenden.
+    one_hour_ago = timezone.now() - timedelta(hours=1)
+    recent_count = CustomerInquiry.objects.filter(
+        buyer=request.user, created_at__gte=one_hour_ago,
+    ).count()
+    if recent_count >= 5:
+        messages.error(request, "Maximal fünf Anfragen pro Stunde. Bitte versuche es später.")
+        return redirect("listings:listing_detail", pk=pk)
+
+    inquiry = CustomerInquiry.objects.create(
+        listing=listing, buyer=request.user, message=form.cleaned_data["message"],
+    )
+    try:
+        from .agent_bridge import generate_private_draft
+
+        output = generate_private_draft(
+            listing, inquiry.message,
+            use_llm=getattr(settings, "FUNDPLATZ_AGENT_USE_LLM", False),
+        )
+        result = output.result
+        inquiry.private_draft = result.combined_draft
+        inquiry.route_source = result.route.source
+        inquiry.selected_agents = list(result.route.agents)
+        inquiry.audit = [item.to_dict() for item in result.audit]
+        inquiry.status = (
+            CustomerInquiry.Status.NEEDS_ATTENTION
+            if output.requires_attention
+            else CustomerInquiry.Status.REVIEW_REQUIRED
+        )
+    except Exception:
+        # Die Käuferanfrage bleibt gespeichert, auch wenn der Agentenlauf scheitert.
+        # Fehlermeldungen (z. B. von Ollama) nie an den Käufer ausgeben.
+        logger.exception("Privater Antwortentwurf für Anfrage %s fehlgeschlagen", inquiry.pk)
+        inquiry.private_draft = "Kein automatischer Entwurf verfügbar. Bitte manuell antworten."
+        inquiry.status = CustomerInquiry.Status.NEEDS_ATTENTION
+    inquiry.save(update_fields=[
+        "private_draft", "status", "route_source", "selected_agents", "audit",
+    ])
+    messages.success(
+        request, "Deine Frage wurde gespeichert. Ein Antwortvorschlag wird nur dem Verkäufer angezeigt."
+    )
+    return redirect("listings:listing_detail", pk=pk)
+
+
+@login_required
+def seller_inquiries(request):
+    """Eigentümerprüfung über listing__seller, kein Einblick in fremde Entwürfe."""
+    inquiries = CustomerInquiry.objects.filter(
+        listing__seller=request.user
+    ).select_related("listing", "buyer")
+    return render(request, "listings/seller_inquiries.html", {
+        "inquiries": inquiries,
+    })
