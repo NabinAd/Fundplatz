@@ -118,6 +118,7 @@ _RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bpreis\s+(?:runter|senken|reduzier\w*|verhandelbar)\b",
         r"\b(?:biete|akzeptier\w*|würdest\s+du|wuerdest\s+du)\b",
         r"\b(?:für|fuer)\s*\d+(?:[.,]\d{1,2})?\s*(?:€|euro|eur)(?=\W|$)",
+        r"\b(?:wäre|waere)\s*\d+(?:[.,]\d{1,2})?\s*(?:€|euro|eur)(?=\W|$)",
     )),
     ("logistics", (
         r"\b(?:versand\w*|versend\w*|verschick\w*|abhol\w*|liefer\w*|porto|zustell\w*|transport\w*)\b",
