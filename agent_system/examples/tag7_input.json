@@ -1,0 +1,17 @@
+{
+  "product": {
+    "listing_id": 1,
+    "title": "Lenovo ThinkPad T480",
+    "description": "16 GB RAM, 512 GB SSD",
+    "condition": "Gut, gebraucht",
+    "price_eur": "220.00",
+    "shipping_available": true,
+    "pickup_available": true,
+    "location": null,
+    "is_negotiable": false,
+    "availability": null
+  },
+  "request": {
+    "message": "Wie viel RAM hat der Laptop und ist Versand möglich?"
+  }
+}

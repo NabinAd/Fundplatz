@@ -25,7 +25,12 @@ class OllamaClient:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
-    def generate(self, system_prompt: str, user_prompt: str) -> str:
+    def generate(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        response_format: dict | str | None = None,
+    ) -> str:
         """Sendet System-/Nutzertext an Ollama und gibt die fertige Antwort zurück."""
         payload = {
             "model": self.model,
@@ -40,6 +45,9 @@ class OllamaClient:
                 "num_predict": 180,
             },
         }
+        if response_format is not None:
+            # Unterstützt Ollamas `format`: `json` oder ein JSON-Schema.
+            payload["format"] = response_format
         request = Request(
             f"{self.base_url}/api/chat",
             data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
