@@ -76,7 +76,8 @@ class PipelineTests(unittest.TestCase):
     def test_nie_automatisch_freigegeben(self):
         result = self.pipeline().run(make_data("Ist Versand möglich?"))
         self.assertEqual(result.review_status, "seller_review_required")
-        self.assertEqual(result.factual_validation, "not_implemented_until_day_12")
+        self.assertEqual(result.factual_validation, "template_and_risk_rules_only")
+        self.assertEqual(result.validation[0].draft_status, "passed_template_checks")
 
     def test_llm_alternative_nicht_in_combined_draft(self):
         class RouterStub:

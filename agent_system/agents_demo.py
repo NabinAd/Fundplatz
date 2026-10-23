@@ -49,14 +49,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n[{label}] {question}")
             print("Gewählt:", ", ".join(result.route.agents) or "Rückfrage")
             print(result.combined_draft)
-        print("\nACHTUNG: Alle Texte sind Entwürfe ohne Verkäuferfreigabe.")
+        print("\nACHTUNG: Regelprüfung ersetzt keine Verkäuferfreigabe.")
         return 0
 
     started = perf_counter()
     result = pipeline.run(data)
     print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     print(f"\nDauer: {perf_counter() - started:.2f} Sekunden")
-    print("HINWEIS: Nur Entwurf. Keine faktische LLM-Validierung, keine Freigabe, kein Nachrichtenversand.")
+    print("HINWEIS: Tag 12 prüft Vorlagen und einige Risiken, keine vollständige semantische Faktentreue. Keine Freigabe und kein Versand.")
     return 0
 
 
