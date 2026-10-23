@@ -4,7 +4,7 @@ from decimal import Decimal
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import Listing
+from .models import CustomerInquiry, Listing
 
 
 class ListingForm(forms.ModelForm):
@@ -111,4 +111,20 @@ class CustomerInquiryForm(forms.Form):
             "class": "form-control", "rows": 4,
             "placeholder": "z. B. Ist Versand möglich und wäre der Preis verhandelbar?",
         }),
+    )
+
+
+class SellerInquiryFilterForm(forms.Form):
+    """Nur Listenfilter. Der Verkäufer wird immer serverseitig bestimmt."""
+
+    q = forms.CharField(
+        label="Suche", max_length=120, required=False, strip=True,
+        widget=forms.TextInput(attrs={
+            "class": "form-control", "placeholder": "Artikel, Frage oder Käufer",
+        }),
+    )
+    status = forms.ChoiceField(
+        label="Status", required=False,
+        choices=[("", "Alle Status"), *CustomerInquiry.Status.choices],
+        widget=forms.Select(attrs={"class": "form-select"}),
     )

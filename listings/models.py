@@ -65,6 +65,7 @@ class CustomerInquiry(models.Model):
     class Status(models.TextChoices):
         REVIEW_REQUIRED = "review_required", "Verkäuferprüfung erforderlich"
         NEEDS_ATTENTION = "needs_attention", "Manuelle Bearbeitung erforderlich"
+        IN_PROGRESS = "in_progress", "In Bearbeitung"
 
     listing = models.ForeignKey(
         Listing, on_delete=models.CASCADE, related_name="customer_inquiries",

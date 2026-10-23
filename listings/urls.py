@@ -18,4 +18,6 @@ urlpatterns = [
 urlpatterns += [
     path("anzeigen/<int:pk>/anfrage/", views.inquiry_submit, name="inquiry_submit"),
     path("anfragen/", views.seller_inquiries, name="seller_inquiries"),
+    path("anfragen/<int:pk>/", views.seller_inquiry_detail, name="seller_inquiry_detail"),
+    path("anfragen/<int:pk>/bearbeitung/", views.seller_inquiry_start, name="seller_inquiry_start"),
 ]

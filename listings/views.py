@@ -10,9 +10,12 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
-from .forms import CustomerInquiryForm, ListingFilterForm, ListingForm, SignupForm
+from .forms import (
+    CustomerInquiryForm, ListingFilterForm, ListingForm,
+    SellerInquiryFilterForm, SignupForm,
+)
 from .models import CustomerInquiry, Listing
 
 
@@ -217,11 +220,76 @@ def inquiry_submit(request, pk):
 
 
 @login_required
+@require_GET
 def seller_inquiries(request):
-    """Eigentümerprüfung über listing__seller, kein Einblick in fremde Entwürfe."""
-    inquiries = CustomerInquiry.objects.filter(
-        listing__seller=request.user
-    ).select_related("listing", "buyer")
+    """Eigene Anfragen filtern und paginieren, niemals fremde Entwürfe laden."""
+    own = CustomerInquiry.objects.filter(listing__seller=request.user)
+    filter_form = SellerInquiryFilterForm(request.GET)
+    inquiries = own.select_related("listing", "buyer")
+
+    if filter_form.is_valid():
+        values = filter_form.cleaned_data
+        if values["status"]:
+            inquiries = inquiries.filter(status=values["status"])
+        if values["q"]:
+            inquiries = inquiries.filter(
+                Q(listing__title__icontains=values["q"])
+                | Q(message__icontains=values["q"])
+                | Q(buyer__username__icontains=values["q"])
+            )
+    else:
+        # Fehlerhafte Filter führen nicht zur unbemerkten breiten Auflistung.
+        inquiries = inquiries.none()
+
+    page_obj = Paginator(inquiries.order_by("-created_at", "-pk"), 10).get_page(
+        request.GET.get("page")
+    )
     return render(request, "listings/seller_inquiries.html", {
-        "inquiries": inquiries,
+        "page_obj": page_obj,
+        "inquiries": page_obj,  # für kompatible Template-Tests aus Tag 16
+        "filter_form": filter_form,
+        "total_count": own.count(),
+        "review_count": own.filter(status=CustomerInquiry.Status.REVIEW_REQUIRED).count(),
+        "attention_count": own.filter(status=CustomerInquiry.Status.NEEDS_ATTENTION).count(),
+        "progress_count": own.filter(status=CustomerInquiry.Status.IN_PROGRESS).count(),
+        "filter_query": _inquiry_filter_query(request),
     })
+
+
+def _inquiry_filter_query(request):
+    """Beim Blättern nur die validen Suchparameter erhalten."""
+    allowed = request.GET.copy()
+    for key in list(allowed):
+        if key not in {"q", "status"}:
+            del allowed[key]
+    return allowed.urlencode()
+
+
+@login_required
+@require_GET
+def seller_inquiry_detail(request, pk):
+    """Private Detailansicht; Existenz fremder Anfragen nicht preisgeben."""
+    inquiry = get_object_or_404(
+        CustomerInquiry.objects.select_related("listing", "buyer"),
+        pk=pk,
+        listing__seller=request.user,
+    )
+    return render(request, "listings/seller_inquiry_detail.html", {
+        "inquiry": inquiry,
+    })
+
+
+@login_required
+@require_POST
+def seller_inquiry_start(request, pk):
+    """Ausdrücklicher Verkäuferklick setzt nur internen Status, kein Versand."""
+    inquiry = get_object_or_404(
+        CustomerInquiry,
+        pk=pk,
+        listing__seller=request.user,
+    )
+    if inquiry.status != CustomerInquiry.Status.IN_PROGRESS:
+        inquiry.status = CustomerInquiry.Status.IN_PROGRESS
+        inquiry.save(update_fields=["status"])
+        messages.success(request, "Anfrage als 'In Bearbeitung' markiert.")
+    return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)

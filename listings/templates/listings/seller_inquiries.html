@@ -2,34 +2,80 @@
 {% block title %}Kundenanfragen | Fundplatz{% endblock %}
 {% block content %}
 <section class="container py-5">
-  <div class="mb-4">
-    <p class="eyebrow eyebrow-dark mb-2">PRIVATES VERKÄUFER-POSTFACH</p>
-    <h1 class="h2 fw-bold">Kundenanfragen</h1>
-    <p class="text-secondary">Die Antwortentwürfe sind privat. An Tag 16 gibt es noch keinen Senden- oder Freigabe-Button.</p>
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+    <div>
+      <p class="eyebrow eyebrow-dark mb-2">PRIVATES VERKÄUFER-POSTFACH</p>
+      <h1 class="h2 fw-bold mb-2">Kundenanfragen</h1>
+      <p class="text-secondary mb-0">Nur deine Anfragen. KI-Entwürfe sind privat und niemals automatisch versendet.</p>
+    </div>
+    <a href="{% url 'listings:my_listings' %}" class="btn btn-outline-dark rounded-pill px-4">← Meine Anzeigen</a>
   </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Gesamt</div><div class="fs-3 fw-bold">{{ total_count }}</div></div></div>
+    <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Prüfung nötig</div><div class="fs-3 fw-bold">{{ review_count }}</div></div></div>
+    <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Manuell bearbeiten</div><div class="fs-3 fw-bold">{{ attention_count }}</div></div></div>
+    <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">In Bearbeitung</div><div class="fs-3 fw-bold">{{ progress_count }}</div></div></div>
+  </div>
+
+  <form action="{% url 'listings:seller_inquiries' %}" method="get" class="p-3 p-md-4 bg-white border rounded-4 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-12 col-md-7">
+        <label for="{{ filter_form.q.id_for_label }}" class="form-label">Suche</label>
+        {{ filter_form.q }}
+        {% if filter_form.q.errors %}<div class="text-danger small">{{ filter_form.q.errors }}</div>{% endif %}
+      </div>
+      <div class="col-12 col-md-3">
+        <label for="{{ filter_form.status.id_for_label }}" class="form-label">Status</label>
+        {{ filter_form.status }}
+        {% if filter_form.status.errors %}<div class="text-danger small">{{ filter_form.status.errors }}</div>{% endif %}
+      </div>
+      <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary" type="submit">Filtern</button></div>
+    </div>
+  </form>
+
   <div class="d-grid gap-3">
-    {% for inquiry in inquiries %}
-      <article class="border rounded-4 p-4 bg-white">
-        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+    {% for inquiry in page_obj %}
+      <article class="border rounded-4 p-3 p-md-4 bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
           <h2 class="h5 mb-0">{{ inquiry.listing.title }}</h2>
           {% if inquiry.status == 'needs_attention' %}
             <span class="badge text-bg-warning">Manuelle Bearbeitung</span>
+          {% elif inquiry.status == 'in_progress' %}
+            <span class="badge text-bg-primary">In Bearbeitung</span>
           {% else %}
             <span class="badge text-bg-secondary">Prüfung erforderlich</span>
           {% endif %}
         </div>
-        <p class="small text-secondary mt-2">Von {{ inquiry.buyer.get_username }} · {{ inquiry.created_at|date:"d.m.Y H:i" }} · Router: {{ inquiry.route_source|default:"nicht verfügbar" }}</p>
-        <h3 class="h6 fw-bold mt-3">Kundenfrage</h3>
-        <p class="mb-3">{{ inquiry.message|linebreaksbr }}</p>
+        <p class="small text-secondary mt-2 mb-3">Anfrage #{{ inquiry.pk }} · Von {{ inquiry.buyer.get_username }} · {{ inquiry.created_at|date:"d.m.Y H:i" }} · Router: {{ inquiry.route_source|default:"nicht verfügbar" }}</p>
+        <h3 class="h6 fw-bold">Kundenfrage</h3>
+        <p>{{ inquiry.message|truncatechars:280 }}</p>
         <h3 class="h6 fw-bold">Privater Antwortvorschlag</h3>
-        <div class="p-3 bg-light rounded-3">{{ inquiry.private_draft|linebreaksbr }}</div>
-        {% if inquiry.selected_agents %}<p class="small text-secondary mt-2 mb-0">Agenten: {{ inquiry.selected_agents|join:", " }}</p>{% endif %}
-        <p class="small text-secondary mt-3 mb-0"><strong>Nicht freigegeben, nicht versendet.</strong> Bitte selbst prüfen.</p>
+        <div class="p-3 bg-light rounded-3 mb-3">{{ inquiry.private_draft|default:"Kein Entwurf verfügbar. Bitte manuell prüfen."|truncatechars:300 }}</div>
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+          <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="btn btn-outline-primary rounded-pill px-4">Anfrage öffnen</a>
+          <span class="small text-secondary">Nicht freigegeben · Nicht versendet</span>
+        </div>
       </article>
     {% empty %}
-      <div class="empty-state text-center px-4 py-5">Noch keine Kundenanfragen zu deinen Anzeigen.</div>
+      <div class="empty-state text-center px-4 py-5">
+        <h2 class="h5">Keine passenden Kundenanfragen</h2>
+        <p class="text-secondary mb-3">Versuche einen anderen Filter oder warte auf neue Anfragen.</p>
+        <a href="{% url 'listings:seller_inquiries' %}" class="btn btn-outline-dark rounded-pill px-4">Alle anzeigen</a>
+      </div>
     {% endfor %}
   </div>
-  <a class="btn btn-outline-dark rounded-pill mt-4" href="{% url 'listings:my_listings' %}">← Meine Anzeigen</a>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Postfach-Seiten" class="mt-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+      {% if page_obj.has_previous %}
+        <a class="btn btn-sm btn-outline-dark" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.previous_page_number }}">← Zurück</a>
+      {% endif %}
+      <span class="text-secondary small">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="btn btn-sm btn-outline-dark" href="?{% if filter_query %}{{ filter_query }}&amp;{% endif %}page={{ page_obj.next_page_number }}">Weiter →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
 </section>
 {% endblock %}

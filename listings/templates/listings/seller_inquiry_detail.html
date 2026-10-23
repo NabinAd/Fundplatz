@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Anfrage #{{ inquiry.pk }} | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+  <a href="{% url 'listings:seller_inquiries' %}" class="text-decoration-none d-inline-block mb-4">← Zum Verkäuferpostfach</a>
+  <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start mb-4">
+    <div>
+      <p class="eyebrow eyebrow-dark mb-2">PRIVATE KUNDENANFRAGE #{{ inquiry.pk }}</p>
+      <h1 class="h2 fw-bold mb-2">{{ inquiry.listing.title }}</h1>
+      <p class="text-secondary mb-0">Von {{ inquiry.buyer.get_username }} · Eingegangen: {{ inquiry.created_at|date:"d.m.Y H:i" }}</p>
+    </div>
+    {% if inquiry.status == 'needs_attention' %}
+      <span class="badge text-bg-warning">Manuelle Bearbeitung erforderlich</span>
+    {% elif inquiry.status == 'in_progress' %}
+      <span class="badge text-bg-primary">In Bearbeitung</span>
+    {% else %}
+      <span class="badge text-bg-secondary">Verkäuferprüfung erforderlich</span>
+    {% endif %}
+  </div>
+
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-8">
+      <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
+        <h2 class="h5 fw-bold">Kundenfrage</h2>
+        <div class="mb-0">{{ inquiry.message|linebreaks }}</div>
+      </article>
+      <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
+        <h2 class="h5 fw-bold">Privater KI-Antwortentwurf</h2>
+        <p class="small text-secondary">Noch nicht fachlich vom Verkäufer freigegeben.</p>
+        <div class="p-3 bg-light rounded-3">{{ inquiry.private_draft|default:"Kein Entwurf verfügbar. Bitte manuell prüfen."|linebreaks }}</div>
+        <div class="alert alert-warning mt-3 mb-0" role="note">
+          <strong>Wichtig:</strong> KI-Entwürfe können Fehler enthalten. Es wurde keine Antwort an den Käufer gesendet.
+        </div>
+      </article>
+      <article class="border rounded-4 p-3 p-md-4 bg-white">
+        <h2 class="h5 fw-bold">Prüfhinweise</h2>
+        {% if inquiry.audit %}
+          <ul class="mb-0">
+            {% for issue in inquiry.audit %}
+              <li>
+                {% if issue.code %}<strong>{{ issue.code }}</strong>{% endif %}
+                {% if issue.message %} – {{ issue.message }}{% else %}{{ issue }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-secondary mb-0">Keine gesonderten Hinweise gespeichert. Das ist keine Garantie für eine fehlerfreie Antwort.</p>
+        {% endif %}
+      </article>
+    </div>
+    <aside class="col-lg-4">
+      <div class="border rounded-4 p-3 p-md-4 bg-white mb-4">
+        <h2 class="h5 fw-bold">Bearbeitungsstatus</h2>
+        <p class="small text-secondary">Hier kannst du die Anfrage organisatorisch übernehmen. Bearbeiten und Freigeben kommen an den nächsten Tagen.</p>
+        {% if inquiry.status != 'in_progress' %}
+          <form method="post" action="{% url 'listings:seller_inquiry_start' inquiry.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary w-100">Als „In Bearbeitung“ markieren</button>
+          </form>
+        {% else %}
+          <p class="fw-semibold mb-0">Du bearbeitest diese Anfrage bereits.</p>
+        {% endif %}
+        <hr>
+        <p class="small mb-1"><strong>Routerquelle:</strong> {{ inquiry.route_source|default:"Nicht verfügbar" }}</p>
+        <p class="small mb-0"><strong>Gewählte Agenten:</strong>
+          {% if inquiry.selected_agents %}{{ inquiry.selected_agents|join:", " }}{% else %}Keine{% endif %}
+        </p>
+      </div>
+      <a class="btn btn-outline-dark rounded-pill" href="{% url 'listings:my_listings' %}">Meine Anzeigen</a>
+    </aside>
+  </div>
+</section>
+{% endblock %}
