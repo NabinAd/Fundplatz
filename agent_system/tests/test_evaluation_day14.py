@@ -97,7 +97,7 @@ class ReportTests(unittest.TestCase):
         result = next(c for c in self.report["cases"] if c["id"] == "A03")
         self.assertEqual(result["expected_agents"], ["information"])
         self.assertEqual(result["source"], "rules")
-        self.assertIn(result["actual_agents"], ([], ["information"]))
+        self.assertEqual(result["actual_agents"], ["information"])
 
     def test_unbekannte_daten_werden_nicht_als_nein_gewertet(self):
         row = next(c for c in self.report["cases"] if c["id"] == "F03")
@@ -143,7 +143,13 @@ class ReportTests(unittest.TestCase):
             summarize([], "offline")
 
     def test_markdown_enthaelt_abweichungen(self):
-        content = markdown_report(self.report)
+        # Die ursprünglichen Tag-14-Fehler wurden an Tag 15 korrigiert.
+        # Die Berichtsfunktion muss Abweichungen weiterhin sichtbar machen.
+        modified = copy.deepcopy(self.cases[2])  # A03
+        modified["expected_agents"] = ["logistics"]  # absichtlich falsches Label
+        modified["expected_text_fragments"] = []
+        report = run_suite(self.base, [modified], offline=True)
+        content = markdown_report(report)
         self.assertIn("# Fundplatz", content)
         self.assertIn("A03", content)
         self.assertIn("Aussagegrenzen", content)

@@ -2,8 +2,8 @@
 
 Die sichere Basisantwort wird deterministisch aus ProductContext erstellt.
 Optional kann ein LLM eine ALTERNATIVE Textfassung vorschlagen. Diese wird
-weder automatisch übernommen noch als Kundenantwort versendet. Der Validator
-für LLM-Texte folgt erst an Tag 12.
+nicht automatisch übernommen und niemals ohne Verkäuferprüfung versendet.
+Die Pipeline prüft solche Vorschläge nur mit begrenzten Heuristiken.
 """
 from __future__ import annotations
 
@@ -57,13 +57,13 @@ class BaseAgent:
         if not draft.strip():
             raise RuntimeError("Ein Agent darf keine leere Basisantwort liefern.")
 
-        # Modelltexte sind bewusst nur ein Nebenprodukt: Tag 12 wird die
-        # Prüfung auf Halluzinationen, Zusagen und Prompt Injection ergänzen.
+        # Modelltexte sind bewusst nur ein Nebenprodukt: Die Pipeline prüft
+        # sie heuristisch, übernimmt sie aber nicht automatisch.
         candidate: str | None = None
         warning: str | None = None
         if llm is not None and not self.allow_llm_suggestion:
-            warning = ("Für Preisverhandlungen bleiben freie LLM-Formulierungen bis "
-                       "zur Validierung an Tag 12 gesperrt.")
+            warning = ("Für Preisverhandlungen bleiben freie LLM-Formulierungen "
+                       "ohne ausdrückliche Verkäuferfreigabe gesperrt.")
         elif llm is not None:
             try:
                 # Beschreibung/Frage sind DATEN, keine Anweisungen. Insbesondere
@@ -124,12 +124,12 @@ class InformationAgent(BaseAgent):
         used: list[str] = []
         missing: list[str] = []
 
-        availability = _contains(question, r"\b(?:verf[üu]gbar\w*|noch\s+da|reserviert|verkauft)\b")
+        availability = _contains(question, r"\b(?:verf[üu]gbar\w*|noch\s+da|reserviert|reservierung|verkauft|schon\s+weg|bereits\s+weg|noch\s+zu\s+haben)\b")
         condition = _contains(question, r"\b(?:zustand|kratzer|defekt\w*|besch[äa]dig\w*|funktionier\w*)\b")
         price = _contains(question, r"\b(?:preis|kostet|kosten|teuer)\b")
         details = _contains(
             question,
-            r"\b(?:ram|ssd|speicher|akku|modell|leistung|größe|groesse|daten|garantie|farbe|alter|technisch\w*|beschreibung|aufl[öo]sung)\b",
+            r"\b(?:ram|ssd|speicher|akku|modell|leistung|größe|groesse|daten|garantie|farbe|alter|baujahr|herstellungsjahr|produktionsjahr|tastatur|beleuchtet|technisch\w*|beschreibung|aufl[öo]sung|wie\s+alt)\b",
         )
 
         if availability:
