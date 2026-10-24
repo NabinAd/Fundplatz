@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 class Listing(models.Model):
@@ -142,3 +143,53 @@ class InquiryDelivery(models.Model):
 
     def __str__(self):
         return f"Antwort für Anfrage #{self.inquiry_id}"
+
+
+class InquiryEvent(models.Model):
+    """Append-only Ereignisprotokoll der normalen Anfrage-Workflows.
+
+    Keine Nachrichtentexte, keine KI-Entwürfe, keine Audit-Payloads kopieren.
+    `audience` steuert die minimale UI-Sichtbarkeit; Käufer-Views filtern
+    zusätzlich explizit auf zwei erlaubte Ereignistypen.
+    """
+
+    class Kind(models.TextChoices):
+        RECEIVED = "received", "Kundenanfrage eingegangen"
+        DRAFT_CREATED = "draft_created", "Interner Antwortentwurf erstellt"
+        DRAFT_FAILED = "draft_failed", "Automatischer Entwurf fehlgeschlagen"
+        STARTED = "started", "Verkäufer hat Bearbeitung begonnen"
+        SELLER_DRAFT_SAVED = "seller_draft_saved", "Verkäuferentwurf gespeichert"
+        APPROVED = "approved", "Antwort intern freigegeben"
+        DELIVERED = "delivered", "Antwort für Käufer bereitgestellt"
+
+    class Audience(models.TextChoices):
+        BUYER = "buyer", "Für Käufer sichtbar"
+        SELLER = "seller", "Nur für Verkäufer"
+
+    inquiry = models.ForeignKey(
+        CustomerInquiry, on_delete=models.CASCADE, related_name="events",
+        verbose_name="Kundenanfrage",
+    )
+    kind = models.CharField("Ereignis", max_length=24, choices=Kind.choices)
+    audience = models.CharField(
+        "Sichtbarkeit", max_length=8, choices=Audience.choices,
+        default=Audience.SELLER,
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name="inquiry_events", verbose_name="Ausgelöst von",
+    )
+    occurred_at = models.DateTimeField(
+        "Ereigniszeitpunkt", default=timezone.now, db_index=True,
+    )
+
+    class Meta:
+        ordering = ["occurred_at", "pk"]
+        verbose_name = "Anfrageereignis"
+        verbose_name_plural = "Anfrageereignisse"
+        indexes = [
+            models.Index(fields=["inquiry", "occurred_at"], name="inquiry_event_when_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} – Anfrage #{self.inquiry_id}"

@@ -51,3 +51,22 @@ class InquiryDeliveryAdmin(admin.ModelAdmin):
         return False
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+from .models import InquiryEvent
+
+
+@admin.register(InquiryEvent)
+class InquiryEventAdmin(admin.ModelAdmin):
+    list_display = ("id", "inquiry", "kind", "audience", "actor", "occurred_at")
+    list_filter = ("kind", "audience")
+    readonly_fields = ("inquiry", "kind", "audience", "actor", "occurred_at")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

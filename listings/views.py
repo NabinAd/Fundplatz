@@ -20,7 +20,8 @@ from .forms import (
     SellerApprovalForm, SellerDraftForm, SellerInquiryFilterForm, SignupForm,
     InquiryDeliveryForm,
 )
-from .models import CustomerInquiry, Listing, InquiryDelivery
+from .models import CustomerInquiry, Listing, InquiryDelivery, InquiryEvent
+from .inquiry_timeline import record_event, seller_timeline, buyer_timeline
 
 
 def home(request):
@@ -188,9 +189,12 @@ def inquiry_submit(request, pk):
         messages.error(request, "Maximal fünf Anfragen pro Stunde. Bitte versuche es später.")
         return redirect("listings:listing_detail", pk=pk)
 
-    inquiry = CustomerInquiry.objects.create(
-        listing=listing, buyer=request.user, message=form.cleaned_data["message"],
-    )
+    with transaction.atomic():
+        inquiry = CustomerInquiry.objects.create(
+            listing=listing, buyer=request.user, message=form.cleaned_data["message"],
+        )
+        record_event(inquiry, InquiryEvent.Kind.RECEIVED, actor=request.user, occurred_at=inquiry.created_at)
+    draft_succeeded = False
     try:
         from .agent_bridge import generate_private_draft
 
@@ -208,15 +212,21 @@ def inquiry_submit(request, pk):
             if output.requires_attention
             else CustomerInquiry.Status.REVIEW_REQUIRED
         )
+        draft_succeeded = True
     except Exception:
         # Die Käuferanfrage bleibt gespeichert, auch wenn der Agentenlauf scheitert.
         # Fehlermeldungen (z. B. von Ollama) nie an den Käufer ausgeben.
         logger.exception("Privater Antwortentwurf für Anfrage %s fehlgeschlagen", inquiry.pk)
         inquiry.private_draft = "Kein automatischer Entwurf verfügbar. Bitte manuell antworten."
         inquiry.status = CustomerInquiry.Status.NEEDS_ATTENTION
-    inquiry.save(update_fields=[
-        "private_draft", "status", "route_source", "selected_agents", "audit",
-    ])
+    with transaction.atomic():
+        inquiry.save(update_fields=[
+            "private_draft", "status", "route_source", "selected_agents", "audit",
+        ])
+        record_event(
+            inquiry, InquiryEvent.Kind.DRAFT_CREATED if draft_succeeded
+            else InquiryEvent.Kind.DRAFT_FAILED,
+        )
     messages.success(
         request, "Deine Frage wurde gespeichert. Ein Antwortvorschlag wird nur dem Verkäufer angezeigt."
     )
@@ -284,6 +294,7 @@ def seller_inquiry_detail(request, pk):
     return render(request, "listings/seller_inquiry_detail.html", {
         "inquiry": inquiry,
         "delivery": InquiryDelivery.objects.filter(inquiry=inquiry).first(),
+        "timeline": seller_timeline(inquiry),
     })
 
 
@@ -291,17 +302,18 @@ def seller_inquiry_detail(request, pk):
 @require_POST
 def seller_inquiry_start(request, pk):
     """Ausdrücklicher Verkäuferklick setzt nur internen Status, kein Versand."""
-    inquiry = get_object_or_404(
-        CustomerInquiry,
-        pk=pk,
-        listing__seller=request.user,
-    )
-    if inquiry.status == CustomerInquiry.Status.APPROVED:
-        return HttpResponse("Freigegebene Anfragen können nicht erneut bearbeitet werden.", status=409)
-    if inquiry.status != CustomerInquiry.Status.IN_PROGRESS:
-        inquiry.status = CustomerInquiry.Status.IN_PROGRESS
-        inquiry.save(update_fields=["status"])
-        messages.success(request, "Anfrage als 'In Bearbeitung' markiert.")
+    with transaction.atomic():
+        inquiry = get_object_or_404(
+            CustomerInquiry.objects.select_for_update(),
+            pk=pk, listing__seller=request.user,
+        )
+        if inquiry.status == CustomerInquiry.Status.APPROVED:
+            return HttpResponse("Freigegebene Anfragen können nicht erneut bearbeitet werden.", status=409)
+        if inquiry.status != CustomerInquiry.Status.IN_PROGRESS:
+            inquiry.status = CustomerInquiry.Status.IN_PROGRESS
+            inquiry.save(update_fields=["status"])
+            record_event(inquiry, InquiryEvent.Kind.STARTED, actor=request.user)
+            messages.success(request, "Anfrage als 'In Bearbeitung' markiert.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
 
 
@@ -336,14 +348,22 @@ def seller_inquiry_edit(request, pk):
     if request.method == "POST":
         form = SellerDraftForm(request.POST)
         if form.is_valid():
-            inquiry.seller_draft = form.cleaned_data["seller_draft"]
-            inquiry.seller_draft_updated_at = timezone.now()
-            # Eine sicherheitsrelevante Warnstufe nicht durch Speichern verstecken.
-            fields = ["seller_draft", "seller_draft_updated_at"]
-            if inquiry.status == CustomerInquiry.Status.REVIEW_REQUIRED:
-                inquiry.status = CustomerInquiry.Status.IN_PROGRESS
-                fields.append("status")
-            inquiry.save(update_fields=fields)
+            with transaction.atomic():
+                inquiry = get_object_or_404(
+                    CustomerInquiry.objects.select_for_update(),
+                    pk=pk, listing__seller=request.user,
+                )
+                if inquiry.status == CustomerInquiry.Status.APPROVED:
+                    return HttpResponse("Freigegebener Text ist gesperrt.", status=409)
+                inquiry.seller_draft = form.cleaned_data["seller_draft"]
+                inquiry.seller_draft_updated_at = timezone.now()
+                # Eine sicherheitsrelevante Warnstufe nicht durch Speichern verstecken.
+                fields = ["seller_draft", "seller_draft_updated_at"]
+                if inquiry.status == CustomerInquiry.Status.REVIEW_REQUIRED:
+                    inquiry.status = CustomerInquiry.Status.IN_PROGRESS
+                    fields.append("status")
+                inquiry.save(update_fields=fields)
+                record_event(inquiry, InquiryEvent.Kind.SELLER_DRAFT_SAVED, actor=request.user, occurred_at=inquiry.seller_draft_updated_at)
             messages.success(request, "Dein privater Antwortentwurf wurde gespeichert. Nichts wurde versendet.")
             return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
     else:
@@ -414,6 +434,7 @@ def seller_inquiry_approve(request, pk):
         inquiry.approved_by = request.user
         inquiry.status = CustomerInquiry.Status.APPROVED
         inquiry.save(update_fields=["approved_response", "approved_at", "approved_by", "status"])
+        record_event(inquiry, InquiryEvent.Kind.APPROVED, actor=request.user, occurred_at=inquiry.approved_at)
 
     messages.success(request, "Antwort intern freigegeben. Sie wurde noch NICHT an den Käufer gesendet.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
@@ -453,13 +474,15 @@ def seller_inquiry_deliver(request, pk):
 
         # OneToOne + get_or_create: wiederholte/parallel eintreffende POSTs
         # dürfen keine zweite Antwort anlegen oder den Snapshot überschreiben.
-        InquiryDelivery.objects.get_or_create(
+        delivery, was_created = InquiryDelivery.objects.get_or_create(
             inquiry=inquiry,
             defaults={
                 "response_text": inquiry.approved_response,
                 "delivered_by": request.user,
             },
         )
+        if was_created:
+            record_event(inquiry, InquiryEvent.Kind.DELIVERED, actor=request.user, occurred_at=delivery.delivered_at)
 
     messages.success(request, "Antwort im Käuferpostfach bereitgestellt. Keine E-Mail versendet.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
@@ -490,4 +513,5 @@ def buyer_inquiry_detail(request, pk):
     return render(request, "listings/buyer_inquiry_detail.html", {
         "inquiry": inquiry,
         "delivery": delivery,
+        "timeline": buyer_timeline(inquiry),
     })

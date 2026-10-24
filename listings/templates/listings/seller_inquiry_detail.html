@@ -76,6 +76,20 @@
         {% endif %}
       </article>
     </div>
+      <section class="border rounded-4 p-3 p-md-4 bg-white mt-4" aria-label="Interner Anfrageverlauf">
+        <h2 class="h5 fw-bold">Interner Nachrichten- und Statusverlauf</h2>
+        <p class="small text-secondary">Nur für den Verkäufer: Eingangszeit, KI-Verarbeitung und Bearbeitungsschritte. Keine unveröffentlichten Texte für Käufer.</p>
+        <ol class="list-group list-group-numbered">
+          {% for event in timeline %}
+            <li class="list-group-item">
+              <div class="fw-semibold">{{ event.get_kind_display }}</div>
+              <div class="small text-secondary">{{ event.occurred_at|date:"d.m.Y H:i:s" }}{% if event.actor %} · {{ event.actor.get_username }}{% endif %}</div>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-secondary">Noch keine Ereignisse erfasst.</li>
+          {% endfor %}
+        </ol>
+      </section>
     <aside class="col-lg-4">
       <div class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <h2 class="h5 fw-bold">Bearbeitungsstatus</h2>
