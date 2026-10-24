@@ -109,6 +109,8 @@
               <button type="submit" class="btn btn-success w-100">Antwort an Käufer bereitstellen</button>
             </form>
           {% endif %}
+        {% elif inquiry.status == 'needs_attention' %}
+          <p class="text-warning-emphasis small mb-0">Kritische KI-Prüfhinweise: Bitte die Antwort manuell bearbeiten und alle Fakten selbst prüfen. Die Warnstufe bleibt erhalten.</p>
         {% elif inquiry.status != 'in_progress' %}
           <form method="post" action="{% url 'listings:seller_inquiry_start' inquiry.pk %}">
             {% csrf_token %}

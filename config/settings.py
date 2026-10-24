@@ -88,3 +88,13 @@ LOGOUT_REDIRECT_URL = "/"
 # $env:FUNDPLATZ_AGENT_USE_LLM="1" setzen und den Django-Server neu starten.
 # Die Django-Integration bleibt synchron (lokale Entwicklung, kein Production-Worker).
 FUNDPLATZ_AGENT_USE_LLM = os.getenv("FUNDPLATZ_AGENT_USE_LLM", "0") == "1"
+
+# Phase 3 / Tag 22: Schutz für lokale Sessions und Formularübermittlung.
+# HTTPS-Weiterleitung/HSTS absichtlich NICHT aktivieren: lokale Entwicklungsumgebung.
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True   # CSRF-Token steht weiterhin in jedem Django-POST-Formular.
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"

@@ -14,6 +14,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.views.decorators.cache import never_cache
 
 from .forms import (
     CustomerInquiryForm, ListingFilterForm, ListingForm,
@@ -234,6 +235,7 @@ def inquiry_submit(request, pk):
 
 
 @login_required
+@never_cache
 @require_GET
 def seller_inquiries(request):
     """Eigene Anfragen filtern und paginieren, niemals fremde Entwürfe laden."""
@@ -283,6 +285,7 @@ def _inquiry_filter_query(request):
 
 
 @login_required
+@never_cache
 @require_GET
 def seller_inquiry_detail(request, pk):
     """Private Detailansicht; Existenz fremder Anfragen nicht preisgeben."""
@@ -309,6 +312,11 @@ def seller_inquiry_start(request, pk):
         )
         if inquiry.status == CustomerInquiry.Status.APPROVED:
             return HttpResponse("Freigegebene Anfragen können nicht erneut bearbeitet werden.", status=409)
+        if inquiry.status == CustomerInquiry.Status.NEEDS_ATTENTION:
+            return HttpResponse(
+                "Kritische Prüfhinweise bleiben bestehen. Bitte den Entwurf manuell bearbeiten.",
+                status=409,
+            )
         if inquiry.status != CustomerInquiry.Status.IN_PROGRESS:
             inquiry.status = CustomerInquiry.Status.IN_PROGRESS
             inquiry.save(update_fields=["status"])
@@ -325,6 +333,9 @@ def _initial_seller_draft(inquiry: CustomerInquiry) -> str:
     """
     if inquiry.seller_draft_updated_at is not None:
         return inquiry.seller_draft
+    # Manuelle Prüfung erforderlich: KEINEN KI-Text als fertig wirkende Antwort vorfüllen.
+    if inquiry.status == CustomerInquiry.Status.NEEDS_ATTENTION:
+        return ""
     original = inquiry.private_draft or ""
     if ("Kein automatischer Entwurf verfügbar" in original
             or "Ein Antwortteil wurde zur Sicherheitsprüfung zurückgehalten" in original):
@@ -333,6 +344,7 @@ def _initial_seller_draft(inquiry: CustomerInquiry) -> str:
 
 
 @login_required
+@never_cache
 @require_http_methods(["GET", "POST"])
 def seller_inquiry_edit(request, pk):
     """Der Verkäufer speichert nur eine eigene private Textfassung.
@@ -387,6 +399,7 @@ def _draft_token(inquiry: CustomerInquiry) -> str:
 
 
 @login_required
+@never_cache
 @require_http_methods(["GET", "POST"])
 def seller_inquiry_approve(request, pk):
     """Speichert eine verbindliche interne Freigabe, verschickt aber NICHTS.
@@ -489,6 +502,7 @@ def seller_inquiry_deliver(request, pk):
 
 
 @login_required
+@never_cache
 @require_GET
 def buyer_inquiries(request):
     """Nur selbst gestellte Fragen. Keine internen Entwürfe oder Audit-Daten."""
@@ -502,6 +516,7 @@ def buyer_inquiries(request):
 
 
 @login_required
+@never_cache
 @require_GET
 def buyer_inquiry_detail(request, pk):
     """Ein Käufer darf nur die eigene Frage samt *bereitgestellter* Antwort lesen."""
