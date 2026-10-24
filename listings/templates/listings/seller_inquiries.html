@@ -16,6 +16,7 @@
     <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Prüfung nötig</div><div class="fs-3 fw-bold">{{ review_count }}</div></div></div>
     <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Manuell bearbeiten</div><div class="fs-3 fw-bold">{{ attention_count }}</div></div></div>
     <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">In Bearbeitung</div><div class="fs-3 fw-bold">{{ progress_count }}</div></div></div>
+    <div class="col-6 col-lg-3"><div class="border rounded-4 p-3 h-100 bg-white"><div class="text-secondary small">Freigegeben</div><div class="fs-3 fw-bold">{{ approved_count }}</div></div></div>
   </div>
 
   <form action="{% url 'listings:seller_inquiries' %}" method="get" class="p-3 p-md-4 bg-white border rounded-4 mb-4">
@@ -41,6 +42,8 @@
           <h2 class="h5 mb-0">{{ inquiry.listing.title }}</h2>
           {% if inquiry.status == 'needs_attention' %}
             <span class="badge text-bg-warning">Manuelle Bearbeitung</span>
+          {% elif inquiry.status == 'approved' %}
+            <span class="badge text-bg-success">Intern freigegeben</span>
           {% elif inquiry.status == 'in_progress' %}
             <span class="badge text-bg-primary">In Bearbeitung</span>
           {% else %}
@@ -51,10 +54,19 @@
         <h3 class="h6 fw-bold">Kundenfrage</h3>
         <p>{{ inquiry.message|truncatechars:280 }}</p>
         <h3 class="h6 fw-bold">Privater Antwortvorschlag</h3>
-        <div class="p-3 bg-light rounded-3 mb-3">{{ inquiry.private_draft|default:"Kein Entwurf verfügbar. Bitte manuell prüfen."|truncatechars:300 }}</div>
+        {% if inquiry.seller_draft_updated_at %}
+          <p class="small fw-semibold text-success mb-1">Von dir bearbeitet (privat)</p>
+          <div class="p-3 bg-light rounded-3 mb-3">{{ inquiry.seller_draft|truncatechars:300 }}</div>
+        {% else %}
+          <div class="p-3 bg-light rounded-3 mb-3">{{ inquiry.private_draft|default:"Kein Entwurf verfügbar. Bitte manuell prüfen."|truncatechars:300 }}</div>
+        {% endif %}
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
           <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="btn btn-outline-primary rounded-pill px-4">Anfrage öffnen</a>
-          <span class="small text-secondary">Nicht freigegeben · Nicht versendet</span>
+          {% if inquiry.status == 'approved' %}
+            <span class="small text-success">Intern freigegeben · Nicht versendet</span>
+          {% else %}
+            <span class="small text-secondary">Nicht freigegeben · Nicht versendet</span>
+          {% endif %}
         </div>
       </article>
     {% empty %}

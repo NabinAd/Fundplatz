@@ -66,6 +66,7 @@ class CustomerInquiry(models.Model):
         REVIEW_REQUIRED = "review_required", "Verkäuferprüfung erforderlich"
         NEEDS_ATTENTION = "needs_attention", "Manuelle Bearbeitung erforderlich"
         IN_PROGRESS = "in_progress", "In Bearbeitung"
+        APPROVED = "approved", "Vom Verkäufer freigegeben"
 
     listing = models.ForeignKey(
         Listing, on_delete=models.CASCADE, related_name="customer_inquiries",
@@ -77,6 +78,25 @@ class CustomerInquiry(models.Model):
     )
     message = models.TextField("Kundenfrage", max_length=2000)
     private_draft = models.TextField("Privater Antwortentwurf", blank=True)
+    # Verkäufertext bleibt getrennt vom unveränderten KI-Original.
+    # Bis zur ausdrücklichen Freigabe bleiben alle Antworten private Entwürfe.
+    seller_draft = models.TextField(
+        "Vom Verkäufer bearbeiteter Entwurf", max_length=3000, blank=True,
+    )
+    seller_draft_updated_at = models.DateTimeField(
+        "Entwurf zuletzt gespeichert", null=True, blank=True,
+    )
+    # Freigabe als eigene, unveränderliche Momentaufnahme: NICHT gleich Versand.
+    approved_response = models.TextField(
+        "Freigegebene Antwort (nur intern)", blank=True, max_length=3000,
+    )
+    approved_at = models.DateTimeField(
+        "Freigabezeitpunkt", null=True, blank=True,
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="approved_customer_inquiries", verbose_name="Freigegeben von",
+    )
     status = models.CharField(
         "Bearbeitungsstatus", max_length=24, choices=Status.choices,
         default=Status.NEEDS_ATTENTION,

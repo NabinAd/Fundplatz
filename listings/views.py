@@ -1,5 +1,6 @@
 """Marketplace-Views: öffentlich lesen, eigene Anzeigen sicher verwalten."""
 import logging
+import hashlib
 from datetime import timedelta
 
 from django.conf import settings
@@ -8,13 +9,15 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db import transaction
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .forms import (
     CustomerInquiryForm, ListingFilterForm, ListingForm,
-    SellerInquiryFilterForm, SignupForm,
+    SellerApprovalForm, SellerDraftForm, SellerInquiryFilterForm, SignupForm,
 )
 from .models import CustomerInquiry, Listing
 
@@ -252,6 +255,7 @@ def seller_inquiries(request):
         "review_count": own.filter(status=CustomerInquiry.Status.REVIEW_REQUIRED).count(),
         "attention_count": own.filter(status=CustomerInquiry.Status.NEEDS_ATTENTION).count(),
         "progress_count": own.filter(status=CustomerInquiry.Status.IN_PROGRESS).count(),
+        "approved_count": own.filter(status=CustomerInquiry.Status.APPROVED).count(),
         "filter_query": _inquiry_filter_query(request),
     })
 
@@ -288,8 +292,124 @@ def seller_inquiry_start(request, pk):
         pk=pk,
         listing__seller=request.user,
     )
+    if inquiry.status == CustomerInquiry.Status.APPROVED:
+        return HttpResponse("Freigegebene Anfragen können nicht erneut bearbeitet werden.", status=409)
     if inquiry.status != CustomerInquiry.Status.IN_PROGRESS:
         inquiry.status = CustomerInquiry.Status.IN_PROGRESS
         inquiry.save(update_fields=["status"])
         messages.success(request, "Anfrage als 'In Bearbeitung' markiert.")
+    return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+
+
+# Phase 3 / Tag 18: ausdrückliches Bearbeiten, weiterhin keine Freigabe.
+def _initial_seller_draft(inquiry: CustomerInquiry) -> str:
+    """Vorhandene Verkäuferfassung priorisieren, sonst sichere KI-Basis vorschlagen.
+
+    Unvollständige/fehlerhafte KI-Ausgaben nicht als Antwort vorbefüllen.
+    """
+    if inquiry.seller_draft_updated_at is not None:
+        return inquiry.seller_draft
+    original = inquiry.private_draft or ""
+    if ("Kein automatischer Entwurf verfügbar" in original
+            or "Ein Antwortteil wurde zur Sicherheitsprüfung zurückgehalten" in original):
+        return ""
+    return original
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def seller_inquiry_edit(request, pk):
+    """Der Verkäufer speichert nur eine eigene private Textfassung.
+
+    Die KI-Vorlage bleibt unverändert. Freigegebene Texte sind gesperrt.
+    """
+    inquiry = get_object_or_404(
+        CustomerInquiry.objects.select_related("listing", "buyer"),
+        pk=pk, listing__seller=request.user,
+    )
+    if inquiry.status == CustomerInquiry.Status.APPROVED:
+        return HttpResponse("Freigegebener Text ist gesperrt. Eine neue Version ist hier nicht vorgesehen.", status=409)
+    if request.method == "POST":
+        form = SellerDraftForm(request.POST)
+        if form.is_valid():
+            inquiry.seller_draft = form.cleaned_data["seller_draft"]
+            inquiry.seller_draft_updated_at = timezone.now()
+            # Eine sicherheitsrelevante Warnstufe nicht durch Speichern verstecken.
+            fields = ["seller_draft", "seller_draft_updated_at"]
+            if inquiry.status == CustomerInquiry.Status.REVIEW_REQUIRED:
+                inquiry.status = CustomerInquiry.Status.IN_PROGRESS
+                fields.append("status")
+            inquiry.save(update_fields=fields)
+            messages.success(request, "Dein privater Antwortentwurf wurde gespeichert. Nichts wurde versendet.")
+            return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+    else:
+        form = SellerDraftForm(initial={"seller_draft": _initial_seller_draft(inquiry)})
+
+    return render(request, "listings/seller_inquiry_edit.html", {
+        "inquiry": inquiry,
+        "form": form,
+    }, status=400 if request.method == "POST" else 200)
+
+
+# Phase 3 / Tag 19: Freigabe ist ein bewusster Schritt des Verkäufers.
+def _draft_token(inquiry: CustomerInquiry) -> str:
+    """Gleicht die bestätigte mit der *aktuell gespeicherten* Entwurfsfassung ab."""
+    timestamp = (
+        inquiry.seller_draft_updated_at.isoformat()
+        if inquiry.seller_draft_updated_at is not None else ""
+    )
+    payload = (timestamp + "\0" + inquiry.seller_draft).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def seller_inquiry_approve(request, pk):
+    """Speichert eine verbindliche interne Freigabe, verschickt aber NICHTS.
+
+    Autorisierung, Aktualität des Entwurfs und Freigabe werden serverseitig geprüft.
+    Die Käuferansicht erhält hier keinerlei neue Daten oder Berechtigungen.
+    """
+    if request.method == "GET":
+        inquiry = get_object_or_404(
+            CustomerInquiry.objects.select_related("listing", "buyer"),
+            pk=pk, listing__seller=request.user,
+        )
+        if inquiry.status == CustomerInquiry.Status.APPROVED:
+            return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+        if inquiry.seller_draft_updated_at is None or not 5 <= len(inquiry.seller_draft.strip()) <= 3000:
+            messages.error(request, "Vor der Freigabe musst du einen gültigen eigenen Antwortentwurf speichern.")
+            return redirect("listings:seller_inquiry_edit", pk=inquiry.pk)
+        return render(request, "listings/seller_inquiry_approve.html", {
+            "inquiry": inquiry,
+            "form": SellerApprovalForm(initial={"draft_token": _draft_token(inquiry)}),
+        })
+
+    form = SellerApprovalForm(request.POST)
+    # Bei der Freigabe muss die Prüfung innerhalb der DB-Transaktion erfolgen.
+    with transaction.atomic():
+        inquiry = get_object_or_404(
+            CustomerInquiry.objects.select_for_update().select_related("listing", "buyer"),
+            pk=pk, listing__seller=request.user,
+        )
+        if inquiry.status == CustomerInquiry.Status.APPROVED:
+            # Wiederholte Requests ändern weder Text, Zeitstempel noch Freigeber.
+            return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+        if inquiry.seller_draft_updated_at is None or not 5 <= len(inquiry.seller_draft.strip()) <= 3000:
+            return HttpResponse("Eigener, gültiger Verkäuferentwurf fehlt.", status=400)
+        if not form.is_valid():
+            return render(request, "listings/seller_inquiry_approve.html", {
+                "inquiry": inquiry, "form": form,
+            }, status=400)
+        if form.cleaned_data["draft_token"] != _draft_token(inquiry):
+            # Die im Browser angezeigte Fassung war beim Absenden nicht mehr aktuell.
+            return HttpResponse("Der Entwurf wurde zwischenzeitlich geändert. Bitte die aktuelle Fassung erneut prüfen.", status=409)
+
+        inquiry.approved_response = inquiry.seller_draft
+        inquiry.approved_at = timezone.now()
+        inquiry.approved_by = request.user
+        inquiry.status = CustomerInquiry.Status.APPROVED
+        inquiry.save(update_fields=["approved_response", "approved_at", "approved_by", "status"])
+
+    messages.success(request, "Antwort intern freigegeben. Sie wurde noch NICHT an den Käufer gesendet.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)

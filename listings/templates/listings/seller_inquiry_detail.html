@@ -11,6 +11,8 @@
     </div>
     {% if inquiry.status == 'needs_attention' %}
       <span class="badge text-bg-warning">Manuelle Bearbeitung erforderlich</span>
+    {% elif inquiry.status == 'approved' %}
+      <span class="badge text-bg-success">Vom Verkäufer freigegeben</span>
     {% elif inquiry.status == 'in_progress' %}
       <span class="badge text-bg-primary">In Bearbeitung</span>
     {% else %}
@@ -26,12 +28,38 @@
       </article>
       <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <h2 class="h5 fw-bold">Privater KI-Antwortentwurf</h2>
-        <p class="small text-secondary">Noch nicht fachlich vom Verkäufer freigegeben.</p>
+        <p class="small text-secondary">Ursprüngliche KI-Vorlage. Eine Freigabe bezieht sich ausschließlich auf die geprüfte Verkäuferfassung.</p>
         <div class="p-3 bg-light rounded-3">{{ inquiry.private_draft|default:"Kein Entwurf verfügbar. Bitte manuell prüfen."|linebreaks }}</div>
         <div class="alert alert-warning mt-3 mb-0" role="note">
           <strong>Wichtig:</strong> KI-Entwürfe können Fehler enthalten. Es wurde keine Antwort an den Käufer gesendet.
         </div>
       </article>
+      <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-1">Dein bearbeiteter Antwortentwurf</h2>
+            <p class="small text-secondary mb-0">Nur für dich sichtbar. Freigabe bedeutet keinen Versand.</p>
+          </div>
+          {% if inquiry.status != 'approved' %}
+            <a href="{% url 'listings:seller_inquiry_edit' inquiry.pk %}" class="btn btn-primary rounded-pill px-3">Antwortentwurf bearbeiten</a>
+          {% else %}
+            <span class="badge text-bg-success">Bearbeitung gesperrt</span>
+          {% endif %}
+        </div>
+        {% if inquiry.seller_draft_updated_at %}
+          <p class="small text-secondary">Zuletzt gespeichert: {{ inquiry.seller_draft_updated_at|date:"d.m.Y H:i" }}</p>
+          <div class="p-3 bg-light rounded-3">{{ inquiry.seller_draft|linebreaks }}</div>
+        {% else %}
+          <p class="mb-0 text-secondary">Noch keine eigene Fassung gespeichert. Du kannst den KI-Vorschlag übernehmen oder einen neuen Text schreiben.</p>
+        {% endif %}
+      </article>
+      {% if inquiry.status == 'approved' %}
+        <article class="border border-success rounded-4 p-3 p-md-4 bg-white mb-4">
+          <h2 class="h5 fw-bold">Intern freigegebene Antwort</h2>
+          <p class="small text-secondary">Freigegeben am {{ inquiry.approved_at|date:"d.m.Y H:i" }} durch {{ inquiry.approved_by.get_username|default:"Ehemaliger Verkäufer" }}. <strong>NICHT versendet.</strong></p>
+          <div class="p-3 bg-light rounded-3">{{ inquiry.approved_response|linebreaks }}</div>
+        </article>
+      {% endif %}
       <article class="border rounded-4 p-3 p-md-4 bg-white">
         <h2 class="h5 fw-bold">Prüfhinweise</h2>
         {% if inquiry.audit %}
@@ -51,14 +79,20 @@
     <aside class="col-lg-4">
       <div class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <h2 class="h5 fw-bold">Bearbeitungsstatus</h2>
-        <p class="small text-secondary">Hier kannst du die Anfrage organisatorisch übernehmen. Bearbeiten und Freigeben kommen an den nächsten Tagen.</p>
-        {% if inquiry.status != 'in_progress' %}
+        <p class="small text-secondary">Prüfe den eigenen Entwurf vor einer ausdrücklichen Freigabe. Eine Freigabe wird hier noch nicht an den Käufer übermittelt.</p>
+        {% if inquiry.status == 'approved' %}
+          <p class="fw-semibold text-success">Intern freigegeben · nicht versendet</p>
+        {% elif inquiry.status != 'in_progress' %}
           <form method="post" action="{% url 'listings:seller_inquiry_start' inquiry.pk %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary w-100">Als „In Bearbeitung“ markieren</button>
           </form>
         {% else %}
           <p class="fw-semibold mb-0">Du bearbeitest diese Anfrage bereits.</p>
+        {% endif %}
+        {% if inquiry.status != 'approved' and inquiry.seller_draft_updated_at %}
+          <hr>
+          <a class="btn btn-outline-success w-100" href="{% url 'listings:seller_inquiry_approve' inquiry.pk %}">Antwort prüfen und freigeben</a>
         {% endif %}
         <hr>
         <p class="small mb-1"><strong>Routerquelle:</strong> {{ inquiry.route_source|default:"Nicht verfügbar" }}</p>

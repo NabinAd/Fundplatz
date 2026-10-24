@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Antwortentwurf bearbeiten – Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5" style="max-width: 980px;">
+  <a class="text-decoration-none d-inline-block mb-4" href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}">← Zur Anfrage zurück</a>
+  <p class="eyebrow eyebrow-dark mb-2">PRIVATE VERKÄUFERBEARBEITUNG</p>
+  <h1 class="h2 fw-bold mb-2">Antwortentwurf bearbeiten</h1>
+  <p class="text-secondary mb-4">Anzeige: {{ inquiry.listing.title }} · Anfrage #{{ inquiry.pk }} · Interessent: {{ inquiry.buyer.get_username }}</p>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="border rounded-4 p-3 p-md-4 bg-white">
+        <form method="post" action="{% url 'listings:seller_inquiry_edit' inquiry.pk %}">
+          {% csrf_token %}
+          <label for="{{ form.seller_draft.id_for_label }}" class="form-label fw-semibold">{{ form.seller_draft.label }}</label>
+          {{ form.seller_draft }}
+          {% if form.seller_draft.errors %}
+            <div class="text-danger small mt-2" role="alert">{{ form.seller_draft.errors }}</div>
+          {% endif %}
+          <div class="form-text">{{ form.seller_draft.help_text }}</div>
+          <div class="alert alert-warning mt-3" role="note">
+            Prüfe Preis, Zustand, Versandbedingungen und alle Aussagen selbst.
+            Diese Seite speichert <strong>nur einen privaten Entwurf</strong> – keine Kundenantwort.
+          </div>
+          <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-primary rounded-pill px-4">Entwurf privat speichern</button>
+            <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="btn btn-outline-secondary rounded-pill px-4">Abbrechen</a>
+          </div>
+        </form>
+      </div>
+    </div>
+    <aside class="col-lg-5">
+      <div class="border rounded-4 p-3 p-md-4 bg-white mb-3">
+        <h2 class="h5 fw-bold">Kundenfrage</h2>
+        <div>{{ inquiry.message|linebreaks }}</div>
+      </div>
+      <div class="border rounded-4 p-3 p-md-4 bg-white">
+        <h2 class="h5 fw-bold">Ursprünglicher KI-Vorschlag (unverändert)</h2>
+        <p class="small text-secondary">Nur als Orientierung; enthält möglicherweise Fehler oder zurückgehaltene Aussagen.</p>
+        <div class="p-3 bg-light rounded-3">{{ inquiry.private_draft|default:"Kein Vorschlag vorhanden."|linebreaks }}</div>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -29,7 +29,7 @@ class CustomerInquiryAdmin(admin.ModelAdmin):
     list_filter = ("status", "route_source")
     search_fields = ("message", "listing__title", "buyer__username")
     readonly_fields = (
-        "listing", "buyer", "message", "private_draft", "status",
+        "listing", "buyer", "message", "private_draft", "seller_draft", "seller_draft_updated_at", "approved_response", "approved_at", "approved_by", "status",
         "route_source", "selected_agents", "audit", "created_at",
     )
 

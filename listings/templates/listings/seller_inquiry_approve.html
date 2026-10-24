@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Antwort prüfen und freigeben – Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5" style="max-width: 850px;">
+  <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="text-decoration-none d-inline-block mb-4">← Zur Anfrage zurück</a>
+  <p class="eyebrow eyebrow-dark mb-2">VERKÄUFERFREIGABE · TAG 19</p>
+  <h1 class="h2 fw-bold mb-3">Antwort vor der Freigabe prüfen</h1>
+  <div class="alert alert-warning" role="note">
+    <strong>Wichtig:</strong> Mit der Freigabe bestätigst du diese Textfassung ausdrücklich.
+    Der Text wird intern gespeichert, aber <strong>noch nicht an den Käufer gesendet</strong>.
+    Aussagen zu Preis, Verfügbarkeit, Zustand und Versand musst du selbst prüfen.
+  </div>
+  <article class="border rounded-4 p-3 p-md-4 bg-white mb-3">
+    <h2 class="h5 fw-bold">Kundenfrage</h2>
+    <div>{{ inquiry.message|linebreaks }}</div>
+  </article>
+  <article class="border rounded-4 p-3 p-md-4 bg-white mb-3">
+    <h2 class="h5 fw-bold">Deine zu bestätigende Antwort</h2>
+    <div class="p-3 bg-light rounded-3">{{ inquiry.seller_draft|linebreaks }}</div>
+    <p class="small text-secondary mt-3 mb-0">Nach der Freigabe wird diese konkrete Fassung gesperrt. Änderungen erfordern später einen gesonderten Freigabe-Workflow.</p>
+  </article>
+  {% if inquiry.audit %}
+    <div class="alert alert-warning" role="note">
+      <strong>Gespeicherte KI-Prüfhinweise:</strong>
+      <ul class="mb-0 mt-2">
+        {% for item in inquiry.audit %}
+          <li>{% if item.code %}{{ item.code }}:{% endif %} {{ item.message|default:item }}</li>
+        {% endfor %}
+      </ul>
+      <p class="small mb-0 mt-2">Die Freigabe löscht oder widerlegt diese Hinweise nicht.</p>
+    </div>
+  {% endif %}
+  <form method="post" action="{% url 'listings:seller_inquiry_approve' inquiry.pk %}" class="border rounded-4 p-3 p-md-4 bg-white">
+    {% csrf_token %}
+    {{ form.draft_token }}
+    {% if form.non_field_errors %}<div class="text-danger">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="form-check mb-3">
+      {{ form.confirmed }}
+      <label class="form-check-label" for="{{ form.confirmed.id_for_label }}">{{ form.confirmed.label }}</label>
+      {% if form.confirmed.errors %}<div class="text-danger small">{{ form.confirmed.errors }}</div>{% endif %}
+    </div>
+    <label class="form-label fw-semibold" for="{{ form.confirmation_word.id_for_label }}">{{ form.confirmation_word.label }}</label>
+    {{ form.confirmation_word }}
+    {% if form.confirmation_word.errors %}<div class="text-danger small">{{ form.confirmation_word.errors }}</div>{% endif %}
+    <div class="d-flex flex-wrap gap-2 mt-4">
+      <button type="submit" class="btn btn-success rounded-pill px-4">Antwort verbindlich intern freigeben</button>
+      <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="btn btn-outline-secondary rounded-pill px-4">Abbrechen</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

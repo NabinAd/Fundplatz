@@ -186,7 +186,8 @@ class SellerInboxDay17Tests(TestCase):
         self.own_inquiry.refresh_from_db()
         self.assertEqual(self.own_inquiry.private_draft, original_draft)
         self.assertEqual(self.own_inquiry.status, CustomerInquiry.Status.IN_PROGRESS)
-        self.assertNotIn("approved", CustomerInquiry.Status.values)
+        self.assertEqual(self.own_inquiry.approved_response, "")
+        self.assertIsNone(self.own_inquiry.approved_at)
 
     def test_html_in_kundenfrage_und_draft_wird_escaped(self):
         suspicious = CustomerInquiry.objects.create(

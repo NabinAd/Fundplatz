@@ -20,4 +20,6 @@ urlpatterns += [
     path("anfragen/", views.seller_inquiries, name="seller_inquiries"),
     path("anfragen/<int:pk>/", views.seller_inquiry_detail, name="seller_inquiry_detail"),
     path("anfragen/<int:pk>/bearbeitung/", views.seller_inquiry_start, name="seller_inquiry_start"),
+    path("anfragen/<int:pk>/entwurf/", views.seller_inquiry_edit, name="seller_inquiry_edit"),
+    path("anfragen/<int:pk>/freigabe/", views.seller_inquiry_approve, name="seller_inquiry_approve"),
 ]

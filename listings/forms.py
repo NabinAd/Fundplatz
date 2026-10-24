@@ -128,3 +128,39 @@ class SellerInquiryFilterForm(forms.Form):
         choices=[("", "Alle Status"), *CustomerInquiry.Status.choices],
         widget=forms.Select(attrs={"class": "form-select"}),
     )
+
+
+class SellerDraftForm(forms.Form):
+    """Nur den privaten Verkäufertext bearbeiten; keine Freigabe-Felder."""
+
+    seller_draft = forms.CharField(
+        label="Deine Antwort an den Interessenten (noch nicht gesendet)",
+        min_length=5, max_length=3000, strip=True,
+        widget=forms.Textarea(attrs={
+            "class": "form-control", "rows": 10,
+            "placeholder": "Formuliere eine sachliche, korrekte Antwort ...",
+            "autocomplete": "off",
+        }),
+        help_text="5 bis 3000 Zeichen. Der Text wird nur privat gespeichert.",
+    )
+
+
+class SellerApprovalForm(forms.Form):
+    """Freigabe erfordert einen bewussten, expliziten Verkäufer-POST."""
+    draft_token = forms.CharField(widget=forms.HiddenInput)
+    confirmed = forms.BooleanField(
+        required=True,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        label="Ich habe den gesamten Antworttext einschließlich Preise, Zustand und Versandbedingungen selbst geprüft.",
+    )
+    confirmation_word = forms.CharField(
+        label='Zur Bestätigung „FREIGEBEN“ eingeben',
+        max_length=20,
+        widget=forms.TextInput(attrs={"class": "form-control", "autocomplete": "off"}),
+    )
+
+    def clean_confirmation_word(self):
+        value = self.cleaned_data["confirmation_word"].strip()
+        if value != "FREIGEBEN":
+            raise forms.ValidationError('Bitte genau „FREIGEBEN“ eingeben.')
+        return value
