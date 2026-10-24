@@ -3,6 +3,9 @@
 {% block title %}{{ listing.title }} | Fundplatz{% endblock %}
 
 {% block content %}
+{% if user.is_authenticated %}
+<div class="container pt-4"><a href="{% url 'listings:buyer_inquiries' %}" class="text-decoration-none small">Meine gestellten Fragen und Antworten →</a></div>
+{% endif %}
 <section class="container py-5">
     <nav class="mb-4" aria-label="Brotkrumennavigation">
         <a href="{% url 'listings:home' %}" class="text-decoration-none">Startseite</a>

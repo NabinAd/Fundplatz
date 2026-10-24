@@ -113,3 +113,32 @@ class CustomerInquiry(models.Model):
 
     def __str__(self):
         return f"Anfrage #{self.pk} zu {self.listing_id}"
+
+
+
+class InquiryDelivery(models.Model):
+    """Eine einzige, ausdrücklich veröffentlichte Antwort pro Kundenanfrage.
+
+    Das unabhängige Snapshot-Feld schützt die Käuferansicht gegen nachträgliche
+    Änderungen am intern freigegebenen Antworttext.
+    Kein E-Mail- oder externer Versand: die Antwort wird im Käuferpostfach sichtbar.
+    """
+
+    inquiry = models.OneToOneField(
+        CustomerInquiry, on_delete=models.CASCADE,
+        related_name="delivery", verbose_name="Kundenanfrage",
+    )
+    response_text = models.TextField("Bereitgestellte Antwort", max_length=3000)
+    delivered_at = models.DateTimeField("Bereitgestellt am", auto_now_add=True)
+    delivered_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, related_name="inquiry_deliveries", verbose_name="Bereitgestellt von",
+    )
+
+    class Meta:
+        verbose_name = "Bereitgestellte Antwort"
+        verbose_name_plural = "Bereitgestellte Antworten"
+        ordering = ["-delivered_at"]
+
+    def __str__(self):
+        return f"Antwort für Anfrage #{self.inquiry_id}"

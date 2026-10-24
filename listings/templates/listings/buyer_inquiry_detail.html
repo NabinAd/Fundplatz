@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Meine Anfrage #{{ inquiry.pk }} | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+  <a href="{% url 'listings:buyer_inquiries' %}" class="text-decoration-none d-inline-block mb-4">← Meine Anfragen</a>
+  <div class="mb-4">
+    <p class="eyebrow eyebrow-dark mb-2">DEINE KUNDENANFRAGE #{{ inquiry.pk }}</p>
+    <h1 class="h2 fw-bold mb-2">{{ inquiry.listing.title }}</h1>
+    <p class="text-secondary">Gestellt am {{ inquiry.created_at|date:"d.m.Y H:i" }} · Verkäufer: {{ inquiry.listing.seller.get_username }}</p>
+  </div>
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <article class="border rounded-4 bg-white p-3 p-md-4 mb-4">
+        <h2 class="h5 fw-bold">Deine Frage</h2>
+        <div>{{ inquiry.message|linebreaks }}</div>
+      </article>
+      {% if delivery %}
+        <article class="border border-success rounded-4 bg-white p-3 p-md-4" aria-label="Verkäuferantwort">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <h2 class="h5 fw-bold mb-0">Antwort des Verkäufers</h2>
+            <span class="badge text-bg-success">Antwort erhalten</span>
+          </div>
+          <p class="small text-secondary">Im Fundplatz-Käuferpostfach bereitgestellt am {{ delivery.delivered_at|date:"d.m.Y H:i" }}</p>
+          <div class="p-3 bg-light rounded-3">{{ delivery.response_text|linebreaks }}</div>
+        </article>
+      {% else %}
+        <div class="alert alert-info" role="status">
+          <strong>Noch keine Antwort erhalten.</strong>
+          Der Verkäufer hat dir zu dieser Anfrage noch keine Antwort bereitgestellt.
+        </div>
+      {% endif %}
+    </div>
+    <aside class="col-lg-4">
+      <div class="border rounded-4 bg-white p-3">
+        <h2 class="h6 fw-bold">Hinweis</h2>
+        <p class="small text-secondary mb-0">Hier erscheinen ausschließlich Antworten, die der Verkäufer geprüft und anschließend für dich bereitgestellt hat. Es wird keine E-Mail versendet.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

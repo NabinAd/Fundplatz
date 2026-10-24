@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Meine Anfragen | Fundplatz{% endblock %}
+{% block content %}
+<section class="container py-5">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <p class="eyebrow eyebrow-dark mb-2">KÄUFER-POSTFACH</p>
+      <h1 class="h2 fw-bold mb-2">Meine Anfragen</h1>
+      <p class="text-secondary mb-0">Deine Fragen und die ausdrücklich bereitgestellten Verkäuferantworten.</p>
+    </div>
+    <a href="{% url 'listings:listing_list' %}" class="btn btn-outline-dark rounded-pill">Weitere Anzeigen</a>
+  </div>
+
+  <div class="d-grid gap-3">
+    {% for inquiry in page_obj %}
+      <article class="bg-white border rounded-4 p-3 p-md-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <h2 class="h5 fw-bold mb-0">{{ inquiry.listing.title }}</h2>
+          {% if inquiry.delivery %}
+            <span class="badge text-bg-success">Antwort erhalten</span>
+          {% else %}
+            <span class="badge text-bg-secondary">Noch keine Antwort</span>
+          {% endif %}
+        </div>
+        <p class="small text-secondary mb-2">Anfrage vom {{ inquiry.created_at|date:"d.m.Y H:i" }} · Verkäufer: {{ inquiry.listing.seller.get_username }}</p>
+        <p class="mb-3">{{ inquiry.message|truncatechars:240 }}</p>
+        <a class="btn btn-outline-primary rounded-pill px-4" href="{% url 'listings:buyer_inquiry_detail' inquiry.pk %}">Anfrage ansehen</a>
+      </article>
+    {% empty %}
+      <div class="empty-state text-center px-3 py-5">
+        <h2 class="h5">Du hast noch keine Fragen gestellt.</h2>
+        <p class="text-secondary">Öffne eine Anzeige und stelle dem Verkäufer deine erste Frage.</p>
+        <a class="btn btn-primary rounded-pill" href="{% url 'listings:listing_list' %}">Anzeigen entdecken</a>
+      </div>
+    {% endfor %}
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="d-flex flex-wrap align-items-center justify-content-center gap-3 mt-4" aria-label="Seiten in Meine Anfragen">
+      {% if page_obj.has_previous %}
+        <a class="btn btn-sm btn-outline-dark" href="?page={{ page_obj.previous_page_number }}">← Vorherige</a>
+      {% endif %}
+      <span class="small text-secondary">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a class="btn btn-sm btn-outline-dark" href="?page={{ page_obj.next_page_number }}">Nächste →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</section>
+{% endblock %}

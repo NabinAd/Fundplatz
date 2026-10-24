@@ -35,3 +35,19 @@ class CustomerInquiryAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+
+from .models import InquiryDelivery
+
+
+@admin.register(InquiryDelivery)
+class InquiryDeliveryAdmin(admin.ModelAdmin):
+    list_display = ("id", "inquiry", "delivered_at", "delivered_by")
+    readonly_fields = ("inquiry", "response_text", "delivered_at", "delivered_by")
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False

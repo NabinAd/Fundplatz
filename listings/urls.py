@@ -23,3 +23,11 @@ urlpatterns += [
     path("anfragen/<int:pk>/entwurf/", views.seller_inquiry_edit, name="seller_inquiry_edit"),
     path("anfragen/<int:pk>/freigabe/", views.seller_inquiry_approve, name="seller_inquiry_approve"),
 ]
+
+
+
+urlpatterns += [
+    path("anfragen/<int:pk>/senden/", views.seller_inquiry_deliver, name="seller_inquiry_deliver"),
+    path("meine-anfragen/", views.buyer_inquiries, name="buyer_inquiries"),
+    path("meine-anfragen/<int:pk>/", views.buyer_inquiry_detail, name="buyer_inquiry_detail"),
+]

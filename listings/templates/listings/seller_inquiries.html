@@ -63,7 +63,11 @@
         <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
           <a href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}" class="btn btn-outline-primary rounded-pill px-4">Anfrage öffnen</a>
           {% if inquiry.status == 'approved' %}
-            <span class="small text-success">Intern freigegeben · Nicht versendet</span>
+            {% if inquiry.is_delivered %}
+              <span class="small text-success">Antwort im Käuferpostfach sichtbar</span>
+            {% else %}
+              <span class="small text-success">Intern freigegeben · Nicht versendet</span>
+            {% endif %}
           {% else %}
             <span class="small text-secondary">Nicht freigegeben · Nicht versendet</span>
           {% endif %}

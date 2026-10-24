@@ -164,3 +164,14 @@ class SellerApprovalForm(forms.Form):
         if value != "FREIGEBEN":
             raise forms.ValidationError('Bitte genau „FREIGEBEN“ eingeben.')
         return value
+
+
+
+class InquiryDeliveryForm(forms.Form):
+    """Ausdrückliche Bestätigung unmittelbar vor Sichtbarmachung beim Käufer."""
+
+    confirmed = forms.BooleanField(
+        required=True,
+        label="Ich möchte diese freigegebene Antwort dem Käufer anzeigen.",
+        error_messages={"required": "Bitte bestätige das Bereitstellen der Antwort."},
+    )

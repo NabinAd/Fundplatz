@@ -24,6 +24,7 @@
             <a class="nav-link fw-semibold" href="{% url 'listings:listing_list' %}">Alle Anzeigen</a>
             {% if user.is_authenticated %}
                 <a class="nav-link fw-semibold" href="{% url 'listings:my_listings' %}">Meine Anzeigen</a>
+                <a class="nav-link fw-semibold d-none d-xl-inline" href="{% url 'listings:buyer_inquiries' %}">Meine Anfragen</a>
                 <a class="btn btn-primary btn-sm rounded-pill px-3" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
                 <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
                     {% csrf_token %}
@@ -44,6 +45,7 @@
                 <a href="{% url 'listings:listing_list' %}">Alle Anzeigen</a>
                 {% if user.is_authenticated %}
                     <a href="{% url 'listings:my_listings' %}">Meine Anzeigen</a>
+                    <a href="{% url 'listings:buyer_inquiries' %}">Meine Anfragen</a>
                     <a class="mobile-nav-primary" href="{% url 'listings:listing_create' %}">+ Anzeige erstellen</a>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Exists, OuterRef
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,8 +18,9 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from .forms import (
     CustomerInquiryForm, ListingFilterForm, ListingForm,
     SellerApprovalForm, SellerDraftForm, SellerInquiryFilterForm, SignupForm,
+    InquiryDeliveryForm,
 )
-from .models import CustomerInquiry, Listing
+from .models import CustomerInquiry, Listing, InquiryDelivery
 
 
 def home(request):
@@ -228,7 +229,9 @@ def seller_inquiries(request):
     """Eigene Anfragen filtern und paginieren, niemals fremde Entwürfe laden."""
     own = CustomerInquiry.objects.filter(listing__seller=request.user)
     filter_form = SellerInquiryFilterForm(request.GET)
-    inquiries = own.select_related("listing", "buyer")
+    inquiries = own.select_related("listing", "buyer").annotate(
+        is_delivered=Exists(InquiryDelivery.objects.filter(inquiry_id=OuterRef("pk")))
+    )
 
     if filter_form.is_valid():
         values = filter_form.cleaned_data
@@ -280,6 +283,7 @@ def seller_inquiry_detail(request, pk):
     )
     return render(request, "listings/seller_inquiry_detail.html", {
         "inquiry": inquiry,
+        "delivery": InquiryDelivery.objects.filter(inquiry=inquiry).first(),
     })
 
 
@@ -413,3 +417,77 @@ def seller_inquiry_approve(request, pk):
 
     messages.success(request, "Antwort intern freigegeben. Sie wurde noch NICHT an den Käufer gesendet.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+
+
+
+# Phase 3 / Tag 20: interne Verkäuferfreigabe und Bereitstellung getrennt halten.
+@login_required
+@require_POST
+def seller_inquiry_deliver(request, pk):
+    """Veröffentlicht die freigegebene Snapshot-Antwort im Käuferpostfach.
+
+    Es werden ausdrücklich KEINE E-Mails versendet. Nur der Anzeigen-Eigentümer
+    darf genau eine Antwort bereitstellen; erneute Klicks erzeugen kein Duplikat.
+    """
+    form = InquiryDeliveryForm(request.POST)
+    with transaction.atomic():
+        inquiry = get_object_or_404(
+            CustomerInquiry.objects.select_for_update(),
+            pk=pk, listing__seller=request.user,
+        )
+        existing = InquiryDelivery.objects.filter(inquiry=inquiry).first()
+        if existing is not None:
+            messages.info(request, "Diese Antwort wurde bereits bereitgestellt.")
+            return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+
+        if (inquiry.status != CustomerInquiry.Status.APPROVED
+                or inquiry.approved_at is None
+                or inquiry.approved_by_id != request.user.pk
+                or not 5 <= len(inquiry.approved_response.strip()) <= 3000):
+            return HttpResponse(
+                "Nur vollständig und ausdrücklich freigegebene Antworten dürfen bereitgestellt werden.",
+                status=409,
+            )
+        if not form.is_valid():
+            return HttpResponse("Bitte bestätige die Bereitstellung.", status=400)
+
+        # OneToOne + get_or_create: wiederholte/parallel eintreffende POSTs
+        # dürfen keine zweite Antwort anlegen oder den Snapshot überschreiben.
+        InquiryDelivery.objects.get_or_create(
+            inquiry=inquiry,
+            defaults={
+                "response_text": inquiry.approved_response,
+                "delivered_by": request.user,
+            },
+        )
+
+    messages.success(request, "Antwort im Käuferpostfach bereitgestellt. Keine E-Mail versendet.")
+    return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+
+
+@login_required
+@require_GET
+def buyer_inquiries(request):
+    """Nur selbst gestellte Fragen. Keine internen Entwürfe oder Audit-Daten."""
+    own = (
+        CustomerInquiry.objects.filter(buyer=request.user)
+        .select_related("listing", "listing__seller", "delivery")
+        .order_by("-created_at", "-pk")
+    )
+    page_obj = Paginator(own, 10).get_page(request.GET.get("page"))
+    return render(request, "listings/buyer_inquiries.html", {"page_obj": page_obj})
+
+
+@login_required
+@require_GET
+def buyer_inquiry_detail(request, pk):
+    """Ein Käufer darf nur die eigene Frage samt *bereitgestellter* Antwort lesen."""
+    inquiry = get_object_or_404(
+        CustomerInquiry.objects.select_related("listing", "listing__seller"),
+        pk=pk, buyer=request.user,
+    )
+    delivery = InquiryDelivery.objects.filter(inquiry=inquiry).first()
+    return render(request, "listings/buyer_inquiry_detail.html", {
+        "inquiry": inquiry,
+        "delivery": delivery,
+    })

@@ -56,7 +56,7 @@
       {% if inquiry.status == 'approved' %}
         <article class="border border-success rounded-4 p-3 p-md-4 bg-white mb-4">
           <h2 class="h5 fw-bold">Intern freigegebene Antwort</h2>
-          <p class="small text-secondary">Freigegeben am {{ inquiry.approved_at|date:"d.m.Y H:i" }} durch {{ inquiry.approved_by.get_username|default:"Ehemaliger Verkäufer" }}. <strong>NICHT versendet.</strong></p>
+          <p class="small text-secondary">Freigegeben am {{ inquiry.approved_at|date:"d.m.Y H:i" }} durch {{ inquiry.approved_by.get_username|default:"Ehemaliger Verkäufer" }}. {% if delivery %}<strong>Im Käuferpostfach sichtbar.</strong>{% else %}<strong>NICHT versendet.</strong>{% endif %}</p>
           <div class="p-3 bg-light rounded-3">{{ inquiry.approved_response|linebreaks }}</div>
         </article>
       {% endif %}
@@ -79,9 +79,22 @@
     <aside class="col-lg-4">
       <div class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <h2 class="h5 fw-bold">Bearbeitungsstatus</h2>
-        <p class="small text-secondary">Prüfe den eigenen Entwurf vor einer ausdrücklichen Freigabe. Eine Freigabe wird hier noch nicht an den Käufer übermittelt.</p>
+        <p class="small text-secondary">Freigabe und Bereitstellung beim Käufer sind zwei getrennte, ausdrückliche Schritte.</p>
         {% if inquiry.status == 'approved' %}
-          <p class="fw-semibold text-success">Intern freigegeben · nicht versendet</p>
+          {% if delivery %}
+            <p class="fw-semibold text-success">Antwort an Käufer bereitgestellt am {{ delivery.delivered_at|date:"d.m.Y H:i" }}</p>
+            <p class="small text-secondary">Im Käuferpostfach sichtbar. Keine E-Mail versendet.</p>
+          {% else %}
+            <p class="fw-semibold text-success">Intern freigegeben · nicht versendet</p>
+            <form method="post" action="{% url 'listings:seller_inquiry_deliver' inquiry.pk %}" class="mt-3 border rounded-3 p-3" aria-label="Freigegebene Antwort bereitstellen">
+              {% csrf_token %}
+              <label class="d-flex align-items-start gap-2 mb-3">
+                <input type="checkbox" name="confirmed" value="on" required class="form-check-input mt-1">
+                <span class="small">Ich habe den freigegebenen Text kontrolliert und möchte ihn diesem Käufer anzeigen.</span>
+              </label>
+              <button type="submit" class="btn btn-success w-100">Antwort an Käufer bereitstellen</button>
+            </form>
+          {% endif %}
         {% elif inquiry.status != 'in_progress' %}
           <form method="post" action="{% url 'listings:seller_inquiry_start' inquiry.pk %}">
             {% csrf_token %}
