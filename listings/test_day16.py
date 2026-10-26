@@ -13,7 +13,7 @@ from .agent_bridge import listing_to_agent_input
 from .models import CustomerInquiry, Listing
 
 
-@override_settings(FUNDPLATZ_AGENT_USE_LLM=False)
+@override_settings(FUNDPLATZ_AGENT_USE_LLM=False, FUNDPLATZ_AGENT_ASYNC=False)
 class DjangoAgentBridgeTests(TestCase):
     def setUp(self):
         user_class = get_user_model()

@@ -19,10 +19,20 @@ class OllamaClient:
         self,
         model: str | None = None,
         base_url: str = "http://127.0.0.1:11434",
-        timeout: int = 120,
+        timeout: int | None = None,
     ) -> None:
         self.model = model or os.environ.get("OLLAMA_MODEL", "qwen3:4b-instruct")
         self.base_url = base_url.rstrip("/")
+        # Zeitlimit pro HTTP-Aufruf; kein Gesamtzeitlimit der Pipeline.
+        # Im Worker beispielsweise OLLAMA_TIMEOUT_SECONDS=45 setzen.
+        if timeout is None:
+            raw = os.environ.get("OLLAMA_TIMEOUT_SECONDS", "120")
+            try:
+                timeout = int(raw)
+            except ValueError as exc:
+                raise ValueError("OLLAMA_TIMEOUT_SECONDS muss eine ganze Zahl sein.") from exc
+        if not 5 <= timeout <= 300:
+            raise ValueError("Ollama-Timeout muss zwischen 5 und 300 Sekunden liegen.")
         self.timeout = timeout
 
     def generate(

@@ -8,6 +8,19 @@ from agent_system.ollama_client import LLMConnectionError, OllamaClient
 
 
 class OllamaClientTests(unittest.TestCase):
+    @patch.dict("os.environ", {"OLLAMA_TIMEOUT_SECONDS": "45"})
+    def test_timeout_from_environment(self):
+        self.assertEqual(OllamaClient().timeout, 45)
+
+    @patch.dict("os.environ", {"OLLAMA_TIMEOUT_SECONDS": "wrong"})
+    def test_timeout_invalid_environment(self):
+        with self.assertRaises(ValueError):
+            OllamaClient()
+
+    def test_timeout_explicit_out_of_range(self):
+        with self.assertRaises(ValueError):
+            OllamaClient(timeout=0)
+
     @patch("agent_system.ollama_client.urlopen")
     def test_liefert_antworttext(self, mocked_open):
         mocked_open.return_value.__enter__.return_value.read.return_value = json.dumps(

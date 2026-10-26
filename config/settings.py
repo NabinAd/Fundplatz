@@ -98,3 +98,8 @@ CSRF_COOKIE_SAMESITE = "Lax"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
+
+# Phase 3 / Tag 23: Opt-in fuer dauerhafte DB-Warteschlange.
+# Bei "1" wird die KI ausschliesslich vom getrennt gestarteten Worker aufgerufen.
+# Default "0" bewahrt den bisherigen Ablauf und die alten Tests.
+FUNDPLATZ_AGENT_ASYNC = os.getenv("FUNDPLATZ_AGENT_ASYNC", "0") == "1"

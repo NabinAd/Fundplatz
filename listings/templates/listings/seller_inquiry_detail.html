@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Anfrage #{{ inquiry.pk }} | Fundplatz{% endblock %}
 {% block content %}
 <section class="container py-5">
@@ -20,6 +21,22 @@
     {% endif %}
   </div>
 
+  <div class="border rounded-4 bg-white p-3 mb-4 d-flex flex-wrap align-items-center gap-2" aria-live="polite">
+    <strong class="small">KI-Verarbeitung:</strong>
+    {% if inquiry.draft_processing == 'queued' %}
+      <span class="badge text-bg-info" data-ai-processing-pending="true">Wartet auf Worker</span>
+    {% elif inquiry.draft_processing == 'running' %}
+      <span class="badge text-bg-primary" data-ai-processing-pending="true">Wird verarbeitet</span>
+    {% elif inquiry.draft_processing == 'failed' %}
+      <span class="badge text-bg-warning">Fehlgeschlagen – manuelle Bearbeitung nötig</span>
+    {% else %}
+      <span class="badge text-bg-success">Abgeschlossen</span>
+    {% endif %}
+    {% if inquiry.draft_finished_at %}
+      <span class="small text-secondary">Beendet: {{ inquiry.draft_finished_at|date:"d.m.Y H:i:s" }}</span>
+    {% endif %}
+    <a class="btn btn-sm btn-outline-secondary ms-auto" href="{% url 'listings:seller_inquiry_detail' inquiry.pk %}">Aktualisieren</a>
+  </div>
   <div class="row g-4 align-items-start">
     <div class="col-lg-8">
       <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
@@ -34,13 +51,23 @@
           <strong>Wichtig:</strong> KI-Entwürfe können Fehler enthalten. Es wurde keine Antwort an den Käufer gesendet.
         </div>
       </article>
+      {% if buyer_friendly_preview and not inquiry.seller_draft_updated_at and inquiry.status != 'approved' %}
+      <article class="border border-primary-subtle rounded-4 p-3 p-md-4 bg-white mb-4">
+        <h2 class="h5 fw-bold">Käuferfreundliche Formulierung (Vorschlag)</h2>
+        <p class="small text-secondary">Aus den hinterlegten Produktdaten formuliert; kein Beleg für die Richtigkeit. Bitte vor einer Freigabe selbst prüfen.</p>
+        <div class="p-3 bg-light rounded-3">{{ buyer_friendly_preview|linebreaks }}</div>
+        <p class="small text-secondary mb-0 mt-3">Der Editor verwendet diese Fassung als Ausgangstext. Der technische KI-Originalentwurf bleibt unverändert.</p>
+      </article>
+      {% endif %}
       <article class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
           <div>
             <h2 class="h5 fw-bold mb-1">Dein bearbeiteter Antwortentwurf</h2>
             <p class="small text-secondary mb-0">Nur für dich sichtbar. Freigabe bedeutet keinen Versand.</p>
           </div>
-          {% if inquiry.status != 'approved' %}
+          {% if inquiry.draft_processing == 'queued' or inquiry.draft_processing == 'running' %}
+            <span class="small text-secondary">Bearbeitung nach Abschluss der KI-Verarbeitung möglich.</span>
+          {% elif inquiry.status != 'approved' %}
             <a href="{% url 'listings:seller_inquiry_edit' inquiry.pk %}" class="btn btn-primary rounded-pill px-3">Antwortentwurf bearbeiten</a>
           {% else %}
             <span class="badge text-bg-success">Bearbeitung gesperrt</span>
@@ -94,7 +121,9 @@
       <div class="border rounded-4 p-3 p-md-4 bg-white mb-4">
         <h2 class="h5 fw-bold">Bearbeitungsstatus</h2>
         <p class="small text-secondary">Freigabe und Bereitstellung beim Käufer sind zwei getrennte, ausdrückliche Schritte.</p>
-        {% if inquiry.status == 'approved' %}
+        {% if inquiry.draft_processing == 'queued' or inquiry.draft_processing == 'running' %}
+          <p class="small text-info-emphasis">Verarbeitung ausstehend. Der Worker muss gestartet sein.</p>
+        {% elif inquiry.status == 'approved' %}
           {% if delivery %}
             <p class="fw-semibold text-success">Antwort an Käufer bereitgestellt am {{ delivery.delivered_at|date:"d.m.Y H:i" }}</p>
             <p class="small text-secondary">Im Käuferpostfach sichtbar. Keine E-Mail versendet.</p>
@@ -119,7 +148,7 @@
         {% else %}
           <p class="fw-semibold mb-0">Du bearbeitest diese Anfrage bereits.</p>
         {% endif %}
-        {% if inquiry.status != 'approved' and inquiry.seller_draft_updated_at %}
+        {% if inquiry.draft_processing != 'queued' and inquiry.draft_processing != 'running' and inquiry.status != 'approved' and inquiry.seller_draft_updated_at %}
           <hr>
           <a class="btn btn-outline-success w-100" href="{% url 'listings:seller_inquiry_approve' inquiry.pk %}">Antwort prüfen und freigeben</a>
         {% endif %}
@@ -133,4 +162,6 @@
     </aside>
   </div>
 </section>
+{# Externe, feste JS-Datei: keine Inline-Skripte und keine Benutzereingaben als Code. #}
+<script src="{% static 'js/inquiry_processing_refresh.js' %}" defer></script>
 {% endblock %}

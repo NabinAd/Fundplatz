@@ -63,6 +63,12 @@ class Listing(models.Model):
 class CustomerInquiry(models.Model):
     """Private Kundenanfrage mit Entwurf; keine gesendete Verkäuferantwort."""
 
+    class DraftProcessing(models.TextChoices):
+        READY = "ready", "KI-Entwurf abgeschlossen"
+        QUEUED = "queued", "KI-Entwurf wartet"
+        RUNNING = "running", "KI-Entwurf wird erstellt"
+        FAILED = "failed", "KI-Entwurf fehlgeschlagen"
+
     class Status(models.TextChoices):
         REVIEW_REQUIRED = "review_required", "Verkäuferprüfung erforderlich"
         NEEDS_ATTENTION = "needs_attention", "Manuelle Bearbeitung erforderlich"
@@ -102,6 +108,15 @@ class CustomerInquiry(models.Model):
         "Bearbeitungsstatus", max_length=24, choices=Status.choices,
         default=Status.NEEDS_ATTENTION,
     )
+    # Phase 3 Tag 23: getrennte Verarbeitung, ohne den Verkäuferstatus umzudeuten.
+    # ready ist der Default für bereits vorhandene Anfragen aus Tag 16–22.
+    draft_processing = models.CharField(
+        "KI-Verarbeitung", max_length=12, choices=DraftProcessing.choices,
+        default=DraftProcessing.READY, db_index=True,
+    )
+    draft_started_at = models.DateTimeField("KI-Lauf gestartet", null=True, blank=True)
+    draft_finished_at = models.DateTimeField("KI-Lauf beendet", null=True, blank=True)
+    draft_attempts = models.PositiveIntegerField("Verarbeitungsversuche", default=0)
     route_source = models.CharField("Routerquelle", max_length=12, blank=True)
     selected_agents = models.JSONField("Ausgewählte Agenten", default=list, blank=True)
     audit = models.JSONField("Prüfhinweise", default=list, blank=True)

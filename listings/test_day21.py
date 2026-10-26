@@ -13,7 +13,7 @@ from .models import CustomerInquiry, InquiryDelivery, InquiryEvent, Listing
 from .views import _draft_token
 
 
-@override_settings(FUNDPLATZ_AGENT_USE_LLM=False)
+@override_settings(FUNDPLATZ_AGENT_USE_LLM=False, FUNDPLATZ_AGENT_ASYNC=False)
 class InquiryTimelineDay21Tests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -331,18 +331,43 @@ class InquiryTimelineDay21Tests(TestCase):
 
     def test_39_legacy_backfill_keeps_real_timestamps(self):
         import importlib
+        from datetime import timedelta
         from django.apps import apps
+
         module = importlib.import_module("listings.migrations.0007_inquiryevent")
-        self.inquiry.approved_at = timezone.now()
-        self.inquiry.approved_by = self.seller
-        self.inquiry.approved_response = "Historische Freigabe"
-        self.inquiry.status = CustomerInquiry.Status.APPROVED
-        self.inquiry.save(update_fields=[
-            "approved_at", "approved_by", "approved_response", "status",
-        ])
-        delivery = InquiryDelivery.objects.create(
-            inquiry=self.inquiry, response_text="Historische Freigabe", delivered_by=self.seller,
+
+        # Die Historie braucht eine realistische, streng chronologische Fixture.
+        # Im setUpTestData wird seller_draft_updated_at vor dem DB-INSERT
+        # erzeugt, waehrend created_at durch auto_now_add ERST beim INSERT
+        # entsteht. Ohne Korrektur liegt der Entwurf manchmal vor dem Eingang.
+        start = timezone.now() - timedelta(days=4)
+        draft_saved_at = start + timedelta(days=1)
+        approved_at = start + timedelta(days=2)
+        delivered_at = start + timedelta(days=3)
+        CustomerInquiry.objects.filter(pk=self.inquiry.pk).update(
+            created_at=start,
+            seller_draft_updated_at=draft_saved_at,
+            approved_at=approved_at,
+            approved_by_id=self.seller.pk,
+            approved_response="Historische Freigabe",
+            status=CustomerInquiry.Status.APPROVED,
         )
+        self.inquiry.refresh_from_db()
+
+        delivery = InquiryDelivery.objects.create(
+            inquiry=self.inquiry,
+            response_text="Historische Freigabe",
+            delivered_by=self.seller,
+        )
+        # auto_now_add liefert andernfalls den heutigen Zeitpunkt; wir testen
+        # bewusst vier unterschiedliche, bereits gespeicherte Alt-Zeitpunkte.
+        InquiryDelivery.objects.filter(pk=delivery.pk).update(delivered_at=delivered_at)
+        delivery.refresh_from_db()
+
+        self.assertLess(self.inquiry.created_at, self.inquiry.seller_draft_updated_at)
+        self.assertLess(self.inquiry.seller_draft_updated_at, self.inquiry.approved_at)
+        self.assertLess(self.inquiry.approved_at, delivery.delivered_at)
+
         module.backfill_history(apps, SimpleNamespace(connection=SimpleNamespace(alias="default")))
         events = list(self.inquiry.events.values_list("kind", "occurred_at"))
         kinds = [kind for kind, _ in events]

@@ -43,7 +43,7 @@ class SellerDraftDay18Tests(TestCase):
         cls.buyer = User.objects.create_user(username="buyer18", password="Safe-password-18")
         cls.listing = Listing.objects.create(
             seller=cls.owner, title="Notebook 18", description="Ein Notebook",
-            price=Decimal("245.00"), is_active=True,
+            price=Decimal("245.00"), is_active=True, shipping_available=True,
         )
         cls.other_listing = Listing.objects.create(
             seller=cls.other, title="Fremde Anzeige", description="Andere",
@@ -87,10 +87,18 @@ class SellerDraftDay18Tests(TestCase):
         self.assertContains(response, "Laut Anzeige ist Versand möglich.")
         self.assertContains(response, "csrfmiddlewaretoken")
 
-    def test_ki_original_ist_erste_vorbelegung(self):
+    def test_kaeuferfreundliche_vorbelegung_ki_original_bleibt_unveraendert(self):
+        # Seit dem Tonfall-Update verwendet der Editor einen datengebundenen
+        # Käufertext. Die technischen KI-Daten werden dadurch nicht geändert.
         self.client.force_login(self.owner)
         form = self.client.get(self.edit()).context["form"]
-        self.assertEqual(form.initial["seller_draft"], self.inquiry.private_draft)
+        draft = form.initial["seller_draft"]
+        self.assertTrue(draft.startswith("Hallo!"))
+        self.assertIn("Ja, Versand ist möglich.", draft)
+        self.assertNotEqual(draft, self.inquiry.private_draft)
+        self.inquiry.refresh_from_db()
+        self.assertEqual(self.inquiry.private_draft, "Laut Anzeige ist Versand möglich.")
+        self.assertEqual(self.inquiry.seller_draft, "")
 
     def test_unbekannte_anfrage_404(self):
         self.client.force_login(self.owner)

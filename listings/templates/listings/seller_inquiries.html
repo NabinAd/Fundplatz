@@ -51,9 +51,27 @@
           {% endif %}
         </div>
         <p class="small text-secondary mt-2 mb-3">Anfrage #{{ inquiry.pk }} · Von {{ inquiry.buyer.get_username }} · {{ inquiry.created_at|date:"d.m.Y H:i" }} · Router: {{ inquiry.route_source|default:"nicht verfügbar" }}</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3" aria-live="polite">
+          <strong class="small text-secondary">KI-Verarbeitung:</strong>
+          {% if inquiry.draft_processing == 'queued' %}
+            <span class="badge text-bg-info" data-ai-processing-pending="true">Wartet auf Worker</span>
+          {% elif inquiry.draft_processing == 'running' %}
+            <span class="badge text-bg-primary" data-ai-processing-pending="true">Wird verarbeitet</span>
+          {% elif inquiry.draft_processing == 'failed' %}
+            <span class="badge text-bg-warning">Fehlgeschlagen – manuelle Bearbeitung nötig</span>
+          {% else %}
+            <span class="badge text-bg-success">Abgeschlossen</span>
+          {% endif %}
+          {% if inquiry.draft_finished_at %}
+            <span class="text-secondary small">{{ inquiry.draft_finished_at|date:"d.m.Y H:i:s" }}</span>
+          {% endif %}
+        </div>
         <h3 class="h6 fw-bold">Kundenfrage</h3>
         <p>{{ inquiry.message|truncatechars:280 }}</p>
         <h3 class="h6 fw-bold">Privater Antwortvorschlag</h3>
+        {% if inquiry.draft_processing == 'queued' or inquiry.draft_processing == 'running' %}
+          <p class="small text-info-emphasis">Die Anfrage ist gespeichert. Der private Entwurf wird vom Worker erstellt.</p>
+        {% endif %}
         {% if inquiry.seller_draft_updated_at %}
           <p class="small fw-semibold text-success mb-1">Von dir bearbeitet (privat)</p>
           <div class="p-3 bg-light rounded-3 mb-3">{{ inquiry.seller_draft|truncatechars:300 }}</div>
@@ -94,4 +112,12 @@
     </nav>
   {% endif %}
 </section>
+<script>
+  // Nur die private GET-Postfachseite aktualisieren, solange mindestens ein Job wartet.
+  (function () {
+    if (document.querySelector('[data-ai-processing-pending="true"]')) {
+      window.setTimeout(function () { window.location.reload(); }, 5000);
+    }
+  }());
+</script>
 {% endblock %}

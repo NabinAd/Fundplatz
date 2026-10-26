@@ -14,3 +14,11 @@ __pycache__/
 .vscode/
 .DS_Store
 Thumbs.db
+
+/db_backup*.sqlite3
+/tag25_reports/
+*.log
+
+/db_backup*.sqlite3
+/tag25_reports/
+*.log
