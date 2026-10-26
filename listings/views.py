@@ -195,6 +195,16 @@ def inquiry_submit(request, pk):
             listing=listing, buyer=request.user, message=form.cleaned_data["message"],
         )
         record_event(inquiry, InquiryEvent.Kind.RECEIVED, actor=request.user, occurred_at=inquiry.created_at)
+    # Tag 23: Käufer-Request erstellt nur einen Queue-Eintrag und ist sofort fertig.
+    # Keine Modellverarbeitung in HTTP-Threads, wenn ASYNC explizit aktiviert ist.
+    if getattr(settings, "FUNDPLATZ_AGENT_ASYNC", False):
+        inquiry.draft_processing = CustomerInquiry.DraftProcessing.QUEUED
+        inquiry.save(update_fields=["draft_processing"])
+        messages.success(
+            request, "Deine Frage ist angekommen. Der Antwortentwurf wird im Hintergrund vorbereitet."
+        )
+        return redirect("listings:listing_detail", pk=pk)
+
     draft_succeeded = False
     try:
         from .agent_bridge import generate_private_draft
@@ -220,13 +230,22 @@ def inquiry_submit(request, pk):
         logger.exception("Privater Antwortentwurf für Anfrage %s fehlgeschlagen", inquiry.pk)
         inquiry.private_draft = "Kein automatischer Entwurf verfügbar. Bitte manuell antworten."
         inquiry.status = CustomerInquiry.Status.NEEDS_ATTENTION
+    # Auch der synchrone Legacy-Pfad muss Tag-23-Verarbeitungsstatus korrekt
+    # abbilden: ein fehlgeschlagener Ollama-Aufruf ist NICHT "ready".
+    inquiry.draft_processing = (
+        CustomerInquiry.DraftProcessing.READY
+        if draft_succeeded else CustomerInquiry.DraftProcessing.FAILED
+    )
+    inquiry.draft_finished_at = timezone.now()
     with transaction.atomic():
         inquiry.save(update_fields=[
             "private_draft", "status", "route_source", "selected_agents", "audit",
+            "draft_processing", "draft_finished_at",
         ])
         record_event(
             inquiry, InquiryEvent.Kind.DRAFT_CREATED if draft_succeeded
             else InquiryEvent.Kind.DRAFT_FAILED,
+            occurred_at=inquiry.draft_finished_at,
         )
     messages.success(
         request, "Deine Frage wurde gespeichert. Ein Antwortvorschlag wird nur dem Verkäufer angezeigt."
@@ -298,6 +317,7 @@ def seller_inquiry_detail(request, pk):
         "inquiry": inquiry,
         "delivery": InquiryDelivery.objects.filter(inquiry=inquiry).first(),
         "timeline": seller_timeline(inquiry),
+        "buyer_friendly_preview": _safe_buyer_friendly_preview(inquiry),
     })
 
 
@@ -310,6 +330,8 @@ def seller_inquiry_start(request, pk):
             CustomerInquiry.objects.select_for_update(),
             pk=pk, listing__seller=request.user,
         )
+        if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING}:
+            return HttpResponse("KI-Verarbeitung läuft noch. Bitte später erneut öffnen.", status=409)
         if inquiry.status == CustomerInquiry.Status.APPROVED:
             return HttpResponse("Freigegebene Anfragen können nicht erneut bearbeitet werden.", status=409)
         if inquiry.status == CustomerInquiry.Status.NEEDS_ATTENTION:
@@ -323,6 +345,33 @@ def seller_inquiry_start(request, pk):
             record_event(inquiry, InquiryEvent.Kind.STARTED, actor=request.user)
             messages.success(request, "Anfrage als 'In Bearbeitung' markiert.")
     return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
+
+
+# Neue, rein textliche Hilfsansicht: verändert weder die technische KI-Vorlage
+# noch Audit, Freigabe oder Käuferantwort. Keine freien LLM-Formulierungen.
+def _safe_buyer_friendly_preview(inquiry: CustomerInquiry) -> str | None:
+    if inquiry.status == CustomerInquiry.Status.NEEDS_ATTENTION:
+        return None
+    if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING,
+                                    CustomerInquiry.DraftProcessing.FAILED}:
+        return None
+    technical = inquiry.private_draft or ""
+    if not technical or any(s in technical for s in (
+        "Ein Antwortteil wurde zur Sicherheitsprüfung zurückgehalten",
+        "Ein Antwortteil konnte nicht erstellt werden",
+        "Kein automatischer Entwurf verfügbar",
+    )):
+        return None
+    if not inquiry.selected_agents:
+        return None
+    try:
+        from agent_system.customer_tone import compose_buyer_friendly_draft
+        from .agent_bridge import listing_to_agent_input
+
+        data = listing_to_agent_input(inquiry.listing, inquiry.message)
+        return compose_buyer_friendly_draft(data, inquiry.selected_agents)
+    except (TypeError, ValueError):
+        return None
 
 
 # Phase 3 / Tag 18: ausdrückliches Bearbeiten, weiterhin keine Freigabe.
@@ -340,7 +389,9 @@ def _initial_seller_draft(inquiry: CustomerInquiry) -> str:
     if ("Kein automatischer Entwurf verfügbar" in original
             or "Ein Antwortteil wurde zur Sicherheitsprüfung zurückgehalten" in original):
         return ""
-    return original
+    # Nur bei regulär abgeschlossener, nicht blockierter Agentenverarbeitung.
+    # Ältere Anfragen ohne Agentenmetadaten behalten die bisherige Vorbelegung.
+    return _safe_buyer_friendly_preview(inquiry) or original
 
 
 @login_required
@@ -355,6 +406,8 @@ def seller_inquiry_edit(request, pk):
         CustomerInquiry.objects.select_related("listing", "buyer"),
         pk=pk, listing__seller=request.user,
     )
+    if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING}:
+        return HttpResponse("Der automatische Entwurf ist noch in Verarbeitung.", status=409)
     if inquiry.status == CustomerInquiry.Status.APPROVED:
         return HttpResponse("Freigegebener Text ist gesperrt. Eine neue Version ist hier nicht vorgesehen.", status=409)
     if request.method == "POST":
@@ -365,6 +418,8 @@ def seller_inquiry_edit(request, pk):
                     CustomerInquiry.objects.select_for_update(),
                     pk=pk, listing__seller=request.user,
                 )
+                if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING}:
+                    return HttpResponse("Der automatische Entwurf ist noch in Verarbeitung.", status=409)
                 if inquiry.status == CustomerInquiry.Status.APPROVED:
                     return HttpResponse("Freigegebener Text ist gesperrt.", status=409)
                 inquiry.seller_draft = form.cleaned_data["seller_draft"]
@@ -412,6 +467,8 @@ def seller_inquiry_approve(request, pk):
             CustomerInquiry.objects.select_related("listing", "buyer"),
             pk=pk, listing__seller=request.user,
         )
+        if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING}:
+            return HttpResponse("KI-Verarbeitung noch nicht abgeschlossen.", status=409)
         if inquiry.status == CustomerInquiry.Status.APPROVED:
             return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
         if inquiry.seller_draft_updated_at is None or not 5 <= len(inquiry.seller_draft.strip()) <= 3000:
@@ -429,6 +486,8 @@ def seller_inquiry_approve(request, pk):
             CustomerInquiry.objects.select_for_update().select_related("listing", "buyer"),
             pk=pk, listing__seller=request.user,
         )
+        if inquiry.draft_processing in {CustomerInquiry.DraftProcessing.QUEUED, CustomerInquiry.DraftProcessing.RUNNING}:
+            return HttpResponse("KI-Verarbeitung noch nicht abgeschlossen.", status=409)
         if inquiry.status == CustomerInquiry.Status.APPROVED:
             # Wiederholte Requests ändern weder Text, Zeitstempel noch Freigeber.
             return redirect("listings:seller_inquiry_detail", pk=inquiry.pk)
