@@ -2,6 +2,10 @@
 
 **Ein lokaler Kleinanzeigen-Marktplatz mit einem Assistenten für Käuferanfragen.** Verkäufer können Anzeigen verwalten, private Antwortentwürfe prüfen und Antworten gezielt im Käuferpostfach bereitstellen.
 
+<!-- Nach dem Hinzufügen des Bildes diesen Kommentar durch die Bildzeile ersetzen:
+![Fundplatz: Startseite mit Navigation und aktuellen Anzeigen](docs/screenshots/home-desktop.png)
+-->
+
 | Auf einen Blick | |
 | --- | --- |
 | **Zweck** | Webentwicklung und die kontrollierte Einbindung eines lokalen Sprachmodells praktisch erproben. |
@@ -11,6 +15,8 @@
 | **Projektstatus** | Lokaler Lernprototyp: Marktplatz, Agentensystem und Website-Integration sind implementiert. Die dokumentierte praktische Gesamtabnahme ist noch offen. |
 
 Ich bin **Nabin Adhikari**, studiere **Wirtschaftsinformatik an der THM** und suche ein **Pflichtpraktikum**. Fundplatz ist mein persönliches Lernprojekt: Ich vertiefe damit meine Kenntnisse in Datenmodellierung, Webentwicklung, Berechtigungen, automatisierten Tests und der Einbindung eines lokalen KI-Assistenten.
+
+**Inhalt:** [Funktionen](#vorhandene-funktionen) · [Screenshots](#screenshots) · [Aufbau](#technischer-aufbau) · [Installation](#lokal-starten) · [Tests](#tests-und-überprüfung) · [Fehlerhilfe](#fehlerhilfe-und-integrierte-korrekturen) · [Projektgrenzen](#projektgrenzen-und-dokumentierte-nächste-schritte)
 
 ## Vorhandene Funktionen
 
@@ -33,6 +39,45 @@ Käuferfrage → privater Antwortentwurf → Verkäufer bearbeitet und speichert
 
 **Der Verkäufer entscheidet über die Antwort.** Eine Freigabe allein macht sie noch nicht für den Käufer sichtbar. Käufer erhalten nur den bereitgestellten Textstand; interne Entwürfe und Prüfhinweise bleiben im Verkäuferbereich. Die Bereitstellung erfolgt innerhalb von Fundplatz, ohne E-Mail oder externen Nachrichtenversand.
 
+Die Karte **„Käuferfreundliche Formulierung (Vorschlag)“** verwendet die hinterlegten Produktdaten und Regeln aus `agent_system/customer_tone.py`, ohne einen zusätzlichen Modellaufruf. Bei normalen, noch nicht bearbeiteten Anfragen dient sie als Ausgangstext im Editor. Bereits gespeicherte Verkäuferentwürfe haben Vorrang; der ursprüngliche KI-Text bleibt erhalten. Bei kritischem Prüfstatus, Agentenfehlern oder blockierten Antwortteilen wird kein solcher Vorschlag automatisch angeboten. Die Formulierung ist kein semantischer Faktencheck und trifft keine automatischen Preis- oder Versandkostenzusagen.
+
+## Screenshots
+
+Empfohlen sind **eine große Startseitenansicht direkt unter der Einleitung** und **drei Bilder hier als kurzer Rundgang**: Anzeige → privater Verkäuferentwurf → bereitgestellte Käuferantwort. So wird neben dem Design auch der zentrale Anfrageablauf sichtbar.
+
+Die Bilder sind noch hinzuzufügen. Lege dafür `docs/screenshots/` im Repository an; `media/` ist für lokale Uploads reserviert und wird von Git ignoriert.
+
+| Priorität | Motiv und vorgeschlagene Datei | Platzierung |
+| --- | --- | --- |
+| 1 | Startseite `/` mit einigen Demoanzeigen: `home-desktop.png` | Direkt unter der Einleitung; Bildzeile ist dort vorbereitet. |
+| 2 | Anzeigendetail mit Produktdaten und Frageformular: `listing-detail.png` | Hier als erstes Bild des Rundgangs. |
+| 3 | Verkäuferdetail mit privatem Entwurf, käuferfreundlichem Vorschlag und Prüfstatus: `seller-draft.png` | Hier als zweites Bild; zeigt den Assistenten und die menschliche Kontrolle. |
+| 4 | Käuferdetail nach ausdrücklicher Bereitstellung: `buyer-reply.png` | Hier als drittes Bild; zeigt das Ergebnis aus Käufersicht. |
+| Optional | Anzeigenübersicht mit Suche/Filtern: `listing-search.png`; mobile Startseite: `home-mobile.png` | Am Ende dieses Abschnitts, bei vielen Bildern in einem aufklappbaren Block. |
+
+<details>
+<summary>Bilder aufnehmen und in die README einfügen</summary>
+
+1. Den unten beschriebenen Anfrageablauf mit Demoanzeigen und getrennten Käufer-/Verkäuferkonten durchführen. Nur erfundene Namen, Fragen und Produktdaten zeigen.
+2. Desktopbilder bei einheitlicher Browserbreite aufnehmen, etwa 1440 Pixel; für die mobile Ansicht etwa 390 Pixel. Auf den relevanten Inhalt zuschneiden, lesbaren Text erhalten und die Dateien als PNG oder WebP speichern.
+3. Die Dateien nach `docs/screenshots/` legen. Dateinamen und Groß-/Kleinschreibung müssen zu den Bildpfaden passen.
+4. Nach dem Hinzufügen der Dateien die folgenden Zeilen hier außerhalb dieses Codeblocks einsetzen. Den vorbereiteten Kommentar unter der Einleitung durch die Startseiten-Bildzeile ersetzen.
+
+```markdown
+### Anzeige und Käuferfrage
+![Anzeigendetail mit Produktdaten und Formular für eine Käuferfrage](docs/screenshots/listing-detail.png)
+
+### Privater Vorschlag für den Verkäufer
+![Verkäuferansicht mit privatem Entwurf, Formulierungsvorschlag und Prüfstatus](docs/screenshots/seller-draft.png)
+
+### Antwort im Käuferpostfach
+![Käuferansicht mit der ausdrücklich freigegebenen und bereitgestellten Antwort](docs/screenshots/buyer-reply.png)
+```
+
+Keine echten Kundendaten, Zugangsdaten, internen Diagnoseprotokolle oder fremden Nachrichten veröffentlichen. Die Bildzeilen sind bis zum Upload als Beispiele vorbereitet, damit keine defekten Bilder erscheinen.
+
+</details>
+
 ## Technischer Aufbau
 
 Fundplatz ist eine serverseitig gerenderte Django-Anwendung. SQLite speichert Benutzer, Anzeigen, Anfragen, Antwortstände und Verlaufsereignisse. Django Templates, lokal eingebundenes Bootstrap-CSS und eigene Styles bilden die Oberfläche; ein kleines JavaScript aktualisiert Seiten während der Entwurfsverarbeitung.
@@ -50,11 +95,13 @@ config/                      Django-Einstellungen und zentrale URLs
 listings/                    Datenmodelle, Formulare, Views und Berechtigungen
   agent_bridge.py            Übergang von Django zur Agenten-Pipeline
   draft_queue.py             Optionale Warteschlange für private Entwürfe
+  inquiry_timeline.py        Ereignisverlauf für Käufer und Verkäufer
   management/commands/       Worker und Datenkonsistenzprüfung
   migrations/                Datenbankschema
   templates/listings/        Katalog, Anzeigen und Postfächer
   tests.py, test_*.py         Django-Tests
 agent_system/                Routing, drei Agenten, Validierung und Ollama-Client
+  customer_tone.py           Regelbasierter Formulierungsvorschlag für Verkäufer
   tests/                     Unittests des Agentensystems
   examples/                  Vordefinierte Evaluationsszenarien
 templates/                   Basislayout, Login und Registrierung
@@ -119,6 +166,13 @@ Für die Prüfung der Trennung zwischen verschiedenen Verkäufern ein weiteres V
 
 Der Standardbetrieb verwendet `FUNDPLATZ_AGENT_USE_LLM=0` und `FUNDPLATZ_AGENT_ASYNC=0`: Die Entwurfsverarbeitung läuft synchron und regelbasiert.
 
+| Umgebungsvariable | Standard | Wirkung |
+| --- | --- | --- |
+| `FUNDPLATZ_AGENT_USE_LLM` | `0` | `1` aktiviert Ollama im verarbeitenden Prozess: Webserver bei synchronem Betrieb, Worker bei Queue-Betrieb. |
+| `FUNDPLATZ_AGENT_ASYNC` | `0` | `1` lässt den Webserver neue Anfragen in die Datenbankwarteschlange einreihen. |
+| `OLLAMA_MODEL` | `qwen3:4b-instruct` | Modellname für den lokalen Ollama-Client. |
+| `OLLAMA_TIMEOUT_SECONDS` | `120` | Zeitlimit pro Modellaufruf; zulässig sind 5–300 Sekunden. |
+
 Für Modellnutzung muss Ollama lokal unter `http://127.0.0.1:11434` laufen. Das im Code voreingestellte Modell herunterladen:
 
 ```powershell
@@ -148,6 +202,19 @@ Ohne laufenden Worker bleiben eingereihte Anfragen im Status `queued`. Der Worke
 Die Einstellungen werden beim Prozessstart gelesen. Für den synchronen Modellbetrieb `FUNDPLATZ_AGENT_ASYNC="0"` und `FUNDPLATZ_AGENT_USE_LLM="1"` im Webserver-Terminal setzen und den Server neu starten. Eine `.env`-Datei wird vom vorhandenen Code nicht automatisch geladen.
 
 </details>
+
+### Verarbeitungsstatus verstehen
+
+Die KI-Verarbeitung und die Verkäuferprüfung haben getrennte Statusanzeigen:
+
+| Technischer Status | Anzeige | Bedeutung |
+| --- | --- | --- |
+| `queued` | Wartet auf Worker | Die Anfrage ist gespeichert und wartet auf Verarbeitung. |
+| `running` | Wird verarbeitet | Der Worker erstellt den privaten Entwurf. |
+| `ready` | Abgeschlossen | Die Verarbeitung ist beendet; die Verkäuferprüfung bleibt erforderlich. |
+| `failed` | Fehlgeschlagen – manuelle Bearbeitung nötig | Der Fehler muss geprüft und die Antwort manuell bearbeitet werden. |
+
+Während `queued` oder `running` lädt das lokale Skript `static/js/inquiry_processing_refresh.js` die private Seite alle fünf Sekunden neu. Bei Abschluss stoppt die automatische Aktualisierung. Eine kurze `running`-Phase kann zwischen zwei Aktualisierungen liegen. **„Abgeschlossen“ bedeutet keine Freigabe oder Bereitstellung an den Käufer.**
 
 ## Tests und Überprüfung
 
@@ -205,6 +272,47 @@ Das vorhandene [`scripts/tag25_abnahme.ps1`](scripts/tag25_abnahme.ps1) bündelt
 
 </details>
 
+## Fehlerhilfe und integrierte Korrekturen
+
+Diese README bündelt die bisherigen sechs README-Dateien. Die fünf ergänzenden README-Dateien wurden nach Übernahme ihrer weiterhin relevanten Inhalte entfernt; ihre Originalfassungen bleiben in der Git-Historie erhalten. Alte ZIP-Installationsschritte und lokale Pfade wie `C:\Kleinanzeigen` gelten nicht für einen frischen Checkout. Für die Einrichtung oben weiterhin `manage.py migrate` ausführen; die hier zusammengefassten Korrekturen erfordern keine zusätzliche Migration.
+
+<details>
+<summary>Queue, Ollama und Oberfläche prüfen</summary>
+
+- **Anfrage bleibt auf „Wartet auf Worker“:** Den Worker aus dem Repository in einem zweiten Terminal starten. Für einen gezielten Wartestatus-Test den Worker zuerst stoppen, eine neue Käuferfrage stellen und anschließend wieder starten. Pro Käufer sind höchstens fünf Fragen innerhalb einer Stunde erlaubt.
+- **Kein Wartestatus sichtbar:** `FUNDPLATZ_AGENT_ASYNC="1"` im Webserver-Terminal setzen und den Server neu starten. Die Einstellung im Worker-Terminal allein ändert den Webserver nicht.
+- **„Router: llm“ sichtbar:** Das belegt die Herkunft der Routingentscheidung; es beweist weder asynchrone Verarbeitung noch freie Generierung der sichtbaren Käuferformulierung. Bei Worker-Anfragen werden normalerweise `draft_started_at` und `draft_finished_at` gespeichert; ältere oder synchrone Anfragen können ohne beide Zeitstempel ebenfalls `ready` sein.
+- **Statusdarstellung veraltet:** Den Browser mit Strg+F5 neu laden und prüfen, ob `/static/js/inquiry_processing_refresh.js` erreichbar ist. Das Skript wird lokal mit `defer` geladen; Kundeninhalte bleiben durch Django maskiert.
+- **Kein käuferfreundlicher Vorschlag:** Prüfen, ob Agenten erkannt wurden und ein kritischer Status, Fehler oder blockierter Antwortteil vorliegt. Ein bereits gespeicherter Verkäufertext wird nicht automatisch ersetzt.
+
+</details>
+
+<details>
+<summary>Übernommene Testfixes und gezielte Regressionstests</summary>
+
+| Frühere Datei | Übernommener Inhalt und heutiger Stand |
+| --- | --- |
+| `README_KAEUFERFREUNDLICH.md` | Regelbasierte Formulierungsschicht, Vorrang gespeicherter Verkäufertexte und unveränderte manuelle Prüfung; oben unter Funktionen beschrieben. |
+| `README_TAG23_STATUSFIX.md` | Getrennte Verarbeitungs-/Prüfstatus, Queue-Diagnose und automatische Seitenaktualisierung; oben unter Verarbeitungsstatus und Fehlerhilfe beschrieben. |
+| `README_TESTFIX_5.md` | Das lokale Reload-Skript ersetzt den Inline-Script-Block, der mit XSS-Tests kollidierte. Tests für Editor-Vorbelegung und Statuswortlaut wurden an den aktuellen Ablauf angepasst; der Originalentwurf und die XSS-Prüfungen bleiben erhalten. |
+| `README_ASYNC_TESTFIX.md` | Die Testklassen aus Tag 16 und Tag 21 deaktivieren LLM und Async-Modus ausdrücklich mit `override_settings`, damit eine bestehende Terminaleinstellung die synchronen Erwartungen nicht verändert. |
+| `README_TAG25_TIMELINE_TESTFIX.md` | Der Legacy-Backfill-Test verwendet ausdrücklich chronologische Testzeitpunkte und prüft weiterhin deren unveränderte Übernahme. Die Migration `0007_inquiryevent.py` und echte Anfragen wurden dabei nicht verändert. |
+
+Bei einem Rückfall gezielt prüfen; anschließend bei Bedarf die vollständigen Tests aus dem Abschnitt oben ausführen:
+
+```powershell
+$env:FUNDPLATZ_AGENT_USE_LLM="0"
+$env:FUNDPLATZ_AGENT_ASYNC="0"
+.\.venv\Scripts\python.exe manage.py test listings.test_buyer_tone listings.test_day16 listings.test_day17 listings.test_day18 listings.test_day19 listings.test_day21 listings.test_day23 -v 2
+.\.venv\Scripts\python.exe manage.py test listings.test_day21.InquiryTimelineDay21Tests.test_39_legacy_backfill_keeps_real_timestamps -v 2
+```
+
+Meldungen wie `RuntimeError: LLM offline` können aus absichtlich simulierten Fehlerfällen stammen. Entscheidend sind die Testzusammenfassung und der Exitcode. Das Abnahmeskript setzt beide Fundplatz-Variablen vorübergehend auf `0` und stellt danach die vorherige Umgebung wieder her. Diagnoseprotokolle unter `tag25_reports/` lokal behalten.
+
+</details>
+
+Die `PHASE*_TAG*.md`-Anleitungen dokumentieren historische Entwicklungsschritte. Die [Abnahmecheckliste](FUNDPLATZ_ABNAHME.md) und die [Tag-25-Anleitung](PHASE3_TAG25.md) bleiben als vertiefende Referenzen bestehen; für den Einstieg gilt diese README.
+
 ## Projektgrenzen und dokumentierte nächste Schritte
 
 Fundplatz ist ein **lokales Lernprojekt mit begrenztem Funktionsumfang**. Die Konfiguration enthält `DEBUG=True`, einen Entwicklungs-Secret-Key als Fallback, lokale Hosts und SQLite. Der Entwicklungsserver und die optionale lokale Queue sind keine fertig eingerichtete Produktionsumgebung.
@@ -221,3 +329,5 @@ Die aktuellen nächsten Schritte sind in [`PHASE3_TAG25.md`](PHASE3_TAG25.md) un
 3. Für einen größeren Betrieb Datenbank und Worker-/Queue-Verwaltung ausbauen, Missbrauchsschutz verbessern und Datenschutz sowie rechtliche Anforderungen prüfen.
 
 Diese Punkte sind offene Arbeiten, keine zugesagten Funktionen oder abgeschlossenen Nachweise.
+
+**Lizenzen:** Für Fundplatz ist derzeit keine eigene Projektlizenz im Repository hinterlegt. Für Bootstrap, Django, Pillow und lokale Modelle gelten deren jeweilige Lizenzen.
