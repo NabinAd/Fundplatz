@@ -1,16 +1,47 @@
 # Fundplatz
 
-**Ein lokaler Kleinanzeigen-Marktplatz mit einem Assistenten für Käuferanfragen.** Verkäufer können Anzeigen verwalten, private Antwortentwürfe prüfen und Antworten gezielt im Käuferpostfach bereitstellen.
+**Django-Marktplatz mit lokalem Multi-Agenten-System für Käuferanfragen**
 
-| Auf einen Blick | |
+Ein persönliches Lernprojekt zur Webentwicklung und kontrollierten KI-Integration. Käufer können Fragen zu Anzeigen stellen. Spezialisierte Agenten für **Produktinformationen, Preisverhandlung und Versand/Abholung** helfen, einen **privaten Antwortentwurf** zu erstellen. Verkäufer prüfen und bearbeiten ihn, geben ihn intern frei und stellen ihn in einem separaten Schritt im Käuferpostfach bereit. **Keine automatische Antwortveröffentlichung.**
+
+**Entwickler und Ziel:** Nabin Adhikari · Wirtschaftsinformatik an der THM · auf der Suche nach einem Pflichtpraktikum.
+
+## Technische Highlights
+
+| Kompetenz | Umsetzung und Code |
 | --- | --- |
-| **Zweck** | Webentwicklung und die kontrollierte Einbindung eines lokalen Sprachmodells praktisch erproben. |
-| **Funktionen** | Benutzerkonten, Anzeigen mit Bildern, Suche und Filter, Käuferanfragen, Verkäuferpostfach, Entwurfsbearbeitung, Freigabe und Antwortbereitstellung. |
-| **Technologien** | Python, Django 5.2.18, SQLite, Django Templates, Bootstrap 5.3.6 und Pillow 12.3.0; optional Ollama mit Qwen. |
-| **Betriebsweise** | Standardmäßig regelbasierte Entwürfe ohne Sprachmodell. Lokale Modellnutzung und Hintergrundverarbeitung sind separat zuschaltbar. |
-| **Projektstatus** | Lokaler Lernprototyp: Marktplatz, Agentensystem und Website-Integration sind implementiert. Die dokumentierte praktische Gesamtabnahme ist noch offen. |
+| **Python / Django** | Marktplatz, Anmeldung, Anzeigen, Suche und Eigentümerrechte in [`listings/`](listings/) |
+| **Multi-Agenten-Architektur** | Unabhängiger [Orchestrator und Pipeline](agent_system/pipeline.py) mit [drei Spezialagenten](agent_system/agents.py) |
+| **Lokales LLM** | Optionale [Ollama-/Qwen-Anbindung](agent_system/ollama_client.py); regelbasierte Entwürfe funktionieren ohne Modell |
+| **Sichere Freigabe** | [Getrennte Datenmodelle](listings/models.py) für privaten Entwurf, Verkäuferfreigabe und beim Käufer bereitgestellten Textstand |
+| **Asynchrone Verarbeitung** | Optionale [Datenbankwarteschlange](listings/draft_queue.py) und separater Worker |
+| **Tests und Evaluation** | Laut lokalem Nachweisstand vom 27.10.2026 **430 Django- und 281 Agententests bestanden**, LLM für diese automatisierten Tests deaktiviert; [historische Evaluationen](evaluation_reports/) |
 
-Ich bin **Nabin Adhikari**, studiere **Wirtschaftsinformatik an der THM** und suche ein **Pflichtpraktikum**. Fundplatz ist mein persönliches Lernprojekt: Ich vertiefe damit meine Kenntnisse in Datenmodellierung, Webentwicklung, Berechtigungen, automatisierten Tests und der Einbindung eines lokalen KI-Assistenten.
+## Einblicke in die Anwendung
+
+Die folgenden Screenshots stammen aus dem Ordner [`Docs/`](Docs/). Sie zeigen die lokale Anwendung; eine vollständige manuelle Abnahme, insbesondere mit echtem Ollama, ist noch offen.
+
+| Screenshot | Vorschau |
+| --- | --- |
+| Ansicht 1 | <img src="Docs/127.0.0.1_8000_anzeigen_neu_.png" alt="Fundplatz: Screenshot 1 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 2 | <img src="Docs/Screenshot%202026-11-02%20210821.png" alt="Fundplatz: Screenshot 2 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 3 | <img src="Docs/Screenshot%202026-11-02%20210922.png" alt="Fundplatz: Screenshot 3 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 4 | <img src="Docs/Screenshot%202026-11-02%20210951.png" alt="Fundplatz: Screenshot 4 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 5 | <img src="Docs/Screenshot%202026-11-02%20211006.png" alt="Fundplatz: Screenshot 5 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 6 | <img src="Docs/Screenshot%202026-11-02%20211808.png" alt="Fundplatz: Screenshot 6 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 7 | <img src="Docs/Screenshot%202026-11-02%20211939.png" alt="Fundplatz: Screenshot 7 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 8 | <img src="Docs/Screenshot%202026-11-02%20213733.png" alt="Fundplatz: Screenshot 8 der lokal gestarteten Anwendung" width="540"> |
+| Ansicht 9 | <img src="Docs/Screenshot%202026-11-02%20214620.png" alt="Fundplatz: Screenshot 9 der lokal gestarteten Anwendung" width="540"> |
+
+> Die Bilder sind als Ansichten nummeriert, weil ihre Dateinamen die gezeigte Funktion nicht eindeutig beschreiben. Es werden keine unbestätigten Bildinhalte behauptet.
+
+## Entwicklungsphasen
+
+Die früheren Tages-, Phasen- und Fixberichte wurden **vollständig** in drei nach Phasen geordnete Dokumente übernommen. Sie sind als historische Arbeitsnotizen gekennzeichnet, nicht als aktuelle Installationsanleitung.
+
+- **[Phase 1 – Django-Marktplatz und Benutzeroberfläche](docs/phase-1/README.md):** Benutzerkonten, Anzeigen, Suchfunktion, Design, frühere Layoutkorrekturen.
+- **[Phase 2 – Lokales Multi-Agenten-System](docs/phase-2/README.md):** Ollama, Eingaben, Router, drei Agenten, Validierung, Evaluation.
+- **[Phase 3 – Integration und Qualitätssicherung](docs/phase-3/README.md):** Verkäuferworkflow, Freigabe, Worker, Sicherheitschecks, Tests und historische Fixberichte.
 
 ## Vorhandene Funktionen
 
@@ -180,7 +211,7 @@ Am **27. Oktober 2026** am [Code-Stand `274086d`](https://github.com/NabinAd/Fun
 | Separate Agententests | **281 Tests erfolgreich.** |
 | Strenger Datenbank-Audit | Auf der frisch angelegten, leeren Datenbank ohne Inkonsistenzen. |
 
-Ein manueller Browserdurchlauf, echte Ollama-Aufrufe und der Start unter Linux/macOS wurden bei dieser Prüfung nicht durchgeführt. Die [bestehende Abnahmecheckliste](FUNDPLATZ_ABNAHME.md) führt die praktische Gesamtabnahme weiterhin als offen. Automatisierte Prüfungen, historische Szenarioberichte und ein manueller Browserdurchlauf sind unterschiedliche Nachweise.
+Ein manueller Browserdurchlauf, echte Ollama-Aufrufe und der Start unter Linux/macOS wurden bei dieser Prüfung nicht durchgeführt. Die [bestehende Abnahmecheckliste](docs/phase-3/README.md) führt die praktische Gesamtabnahme weiterhin als offen. Automatisierte Prüfungen, historische Szenarioberichte und ein manueller Browserdurchlauf sind unterschiedliche Nachweise.
 
 <details>
 <summary>Szenarioauswertungen und vorhandenes Prüfskript</summary>
@@ -214,7 +245,7 @@ Fundplatz ist ein **lokales Lernprojekt mit begrenztem Funktionsumfang**. Die Ko
 - **Lokale Daten:** Die Queue verwendet Produktdaten zum Verarbeitungszeitpunkt. Beim Löschen einer Anzeige werden zugehörige Bilddateien nicht automatisch vom Datenträger entfernt.
 - **Prüfgrenzen:** Automatisierte Tests ersetzen keine Browser-, Last-, Sicherheits- oder Backup-Wiederherstellungsprüfung.
 
-Die aktuellen nächsten Schritte sind in [`PHASE3_TAG25.md`](PHASE3_TAG25.md) und [`FUNDPLATZ_ABNAHME.md`](FUNDPLATZ_ABNAHME.md) dokumentiert:
+Die aktuellen nächsten Schritte sind in [`PHASE3_TAG25.md`](docs/phase-3/README.md) und [`FUNDPLATZ_ABNAHME.md`](docs/phase-3/README.md) dokumentiert:
 
 1. Die lokale Gesamtabnahme einschließlich getrennter Käufer-/Verkäuferkonten, echter Ollama-Verarbeitung im Browser und Ausfallverhalten abschließen.
 2. Vor einem öffentlichen Betrieb Deployment-Einstellungen, Secrets, HTTPS und Cookies härten sowie Hosting, Backups, Wiederherstellung und Monitoring klären.
