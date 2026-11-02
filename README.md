@@ -1,8 +1,18 @@
 # Fundplatz
 
-**Lokaler Django-Marktplatz mit drei spezialisierten Agenten für Käuferanfragen.** Käufer stellen Fragen zu Anzeigen; Fundplatz erstellt einen *privaten* Antwortentwurf. Verkäufer prüfen und bearbeiten den Text, geben ihn intern frei und stellen ihn anschließend separat im Käuferpostfach bereit. **Keine automatische Veröffentlichung und kein externer Nachrichtenversand.**
+**KI-unterstützte Käuferkommunikation mit menschlicher Kontrolle.** Fundplatz ist ein lokaler Django-Marktplatz mit drei spezialisierten Agenten für Produktinformationen, Preisverhandlung sowie Versand/Abholung. Käuferfragen werden zu **privaten Antwortentwürfen** verarbeitet. Der Verkäufer kontrolliert den Inhalt, kann ihn ändern, gibt ihn intern frei und stellt ihn **erst in einem weiteren Schritt** im Fundplatz-Käuferpostfach bereit.
 
-**Über das Projekt:** Persönliches Lernprojekt von Nabin Adhikari (Wirtschaftsinformatik, THM); entwickelt zur Vertiefung von Python, Django, KI-Integration und Softwaretests im Hinblick auf ein Pflichtpraktikum.
+**Entwickler:** Nabin Adhikari · Wirtschaftsinformatik (THM) · persönliches Lernprojekt für Python, Webentwicklung, lokales KI-Routing und Softwaretests · auf der Suche nach einem Pflichtpraktikum.
+
+**Projekt lesen:** [Agentenarchitektur mit Diagrammen](AGENTS.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Screenshots](#die-anwendung-in-bildern) · [Tests](docs/testing.md)
+
+## Warum Fundplatz?
+
+**Beispiel:** Ein Verkäufer inseriert ein Fahrrad für **100 €**. Jemand schreibt „20 € akzeptabel?“ und ein anderer: „Wenn du 40 € machst, hole ich es sofort ab.“ Dazu kommen wiederholte Fragen wie „Noch da?“ und „Versand möglich?“.
+
+Statt solche Nachrichten genervt zu ignorieren oder jedes Mal von vorne zu formulieren, soll der Verkäufer **schnell einen sachlichen, überprüfbaren Vorschlag** erhalten. Fundplatz trennt Preis- und Logistikfragen, nutzt bekannte Angebotsdaten und zeigt den Entwurf zur manuellen Prüfung. **Weder ein Rabatt noch ein Abholtermin wird automatisch zugesagt.** Diese Beispielanfragen sind **hypothetisch**; sie dienen zur Erklärung der Idee, nicht als Beleg gemessener Zeitersparnis.
+
+Für einen Überblick über die manuelle **Ist-Situation**, den gewünschten **Soll-Ablauf** und weitere Beispiele siehe [Ist-/Soll-Analyse](docs/ist-soll-situation.md).
 
 ## Technische Highlights
 
@@ -15,7 +25,7 @@
 | **Hintergrundverarbeitung** | Optionale [DB-Queue](listings/draft_queue.py) mit separatem Management-Worker |
 | **Testbarkeit** | [Django-Tests](listings/) und [Agententests](agent_system/tests/); historisch dokumentiert: 430 + 281 erfolgreiche Tests am 27.10.2026, nicht von GitHub-CI bestätigt |
 
-**In zwei Minuten:** [Bilder und Funktionen](#die-anwendung-in-bildern) · [Architektur](docs/architecture.md) · [Tests](docs/testing.md) · [Evaluationsberichte](docs/evaluation/README.md) · [lokaler Start](#lokal-starten)
+**In zwei Minuten:** [Agentensystem als Diagramm](AGENTS.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Bilder und Funktionen](#die-anwendung-in-bildern) · [technische Architektur](docs/architecture.md) · [Tests](docs/testing.md) · [Evaluation](docs/evaluation/README.md) · [lokaler Start](#lokal-starten)
 
 ## Die Anwendung in Bildern
 
@@ -82,6 +92,8 @@ Ein interner Nachrichten- und Statusverlauf zeigt Eingang und Verarbeitung der A
 
 ## Ablauf und Architektur
 
+**[Alle Architekturdiagramme in AGENTS.md öffnen](AGENTS.md)** – enthält den Router, die drei Agenten, Eingabeprüfung, optionales lokales Ollama, Validierung und die Human-in-the-Loop-Freigabe als grafische Ablauf- und Sequenzdiagramme.
+
 ```text
 Käuferfrage → Produktkontext → Routing → Information / Verhandlung / Logistik
             → Validierung → privater Antwortentwurf
@@ -140,6 +152,10 @@ $env:FUNDPLATZ_AGENT_ASYNC="0"
 
 Fundplatz ist ein **lokaler Lernprototyp**, kein produktiv abgesicherter Marktplatz. Die vorhandene Konfiguration nutzt `DEBUG=True`, lokale Hosts, einen Entwicklungs-Secret-Key-Fallback und SQLite. Es gibt keinen externen Nachrichtenversand, keine Zahlungsabwicklung und keinen produktiven Echtzeit-Chat. Berechtigungstests und einfache Validierungsregeln ersetzen weder Penetrationstests noch eine vollständige DSGVO-Prüfung. Vor einem öffentlichen Deployment wären unter anderem Secrets, HTTPS, Härtung, Backup, Monitoring und Lasttests erforderlich. Bei fehlenden Produktdaten oder LLM-Ausfall muss der Verkäufer selbst prüfen.
 
+**Lokale Modellnutzung:** Der Standardbetrieb verwendet Regeln ohne externe KI-API; Ollama/Qwen ist optional und kann lokal laufen. Das vermeidet eine verpflichtende Cloud-LLM-API, ist aber **keine pauschale Datenschutzgarantie** und verursacht gegebenenfalls Kosten für Hardware und Strom. Details in [AGENTS.md](AGENTS.md).
+
+**Kleinanzeigen-Bezug:** Die Idee wurde von typischen Kleinanzeigen-Nachrichten inspiriert, die aktuelle Anwendung ist **keine offizielle Kleinanzeigen-Integration**. Es gibt weder automatisches Einlesen noch externen Versand. Die [Kleinanzeigen-Nutzungsbedingungen](https://themen.kleinanzeigen.de/nutzungsbedingungen/) beschränken in § 5 automatisierte Zugriffs- und Sammelmechanismen ohne ausdrückliche schriftliche Zustimmung. Vor einer späteren Integration müssten Erlaubnis, Plattformregeln und Datenschutz gesondert geprüft werden; Human-in-the-Loop allein bedeutet **keine garantierte AGB-Konformität**.
+
 ## Repository-Orientierung
 
 - [`listings/`](listings/) – Django-Modelle, Formulare, Views, Berechtigungen und Tests
@@ -147,5 +163,7 @@ Fundplatz ist ein **lokaler Lernprototyp**, kein produktiv abgesicherter Marktpl
 - [`config/`](config/) – Django-Einstellungen und URL-Konfiguration
 - [`static/`](static/) und [`templates/`](templates/) – Darstellung, Bootstrap, HTML und JavaScript
 - [`scripts/`](scripts/) – lokales Abnahmeskript
-- [`docs/`](docs/) – Architektur, Testdokumentation, Screenshots, historische Evaluationen und zusammengefasste Entwicklungsschritte
+- [`AGENTS.md`](AGENTS.md) – grafische Multi-Agenten-Architektur und Human-in-the-Loop
+- [`docs/ist-soll-situation.md`](docs/ist-soll-situation.md) – hypothetische Anwendungsfälle, Nutzen und Grenzen
+- [`docs/`](docs/) – technische Architektur, Tests, Screenshots, historische Evaluationen und Entwicklungsschritte
 
