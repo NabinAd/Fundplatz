@@ -1,104 +1,101 @@
 # Fundplatz
 
-**Django-Marktplatz mit lokalem Multi-Agenten-System für Käuferanfragen**
+**Lokaler Django-Marktplatz mit drei spezialisierten Agenten für Käuferanfragen.** Käufer stellen Fragen zu Anzeigen; Fundplatz erstellt einen *privaten* Antwortentwurf. Verkäufer prüfen und bearbeiten den Text, geben ihn intern frei und stellen ihn anschließend separat im Käuferpostfach bereit. **Keine automatische Veröffentlichung und kein externer Nachrichtenversand.**
 
-Ein persönliches Lernprojekt zur Webentwicklung und kontrollierten KI-Integration. Käufer können Fragen zu Anzeigen stellen. Spezialisierte Agenten für **Produktinformationen, Preisverhandlung und Versand/Abholung** helfen, einen **privaten Antwortentwurf** zu erstellen. Verkäufer prüfen und bearbeiten ihn, geben ihn intern frei und stellen ihn in einem separaten Schritt im Käuferpostfach bereit. **Keine automatische Antwortveröffentlichung.**
-
-**Entwickler und Ziel:** Nabin Adhikari · Wirtschaftsinformatik an der THM · auf der Suche nach einem Pflichtpraktikum.
+**Über das Projekt:** Persönliches Lernprojekt von Nabin Adhikari (Wirtschaftsinformatik, THM); entwickelt zur Vertiefung von Python, Django, KI-Integration und Softwaretests im Hinblick auf ein Pflichtpraktikum.
 
 ## Technische Highlights
 
-| Kompetenz | Umsetzung und Code |
+| Schwerpunkt | Nachweis im Code |
 | --- | --- |
-| **Python / Django** | Marktplatz, Anmeldung, Anzeigen, Suche und Eigentümerrechte in [`listings/`](listings/) |
-| **Multi-Agenten-Architektur** | Unabhängiger [Orchestrator und Pipeline](agent_system/pipeline.py) mit [drei Spezialagenten](agent_system/agents.py) |
-| **Lokales LLM** | Optionale [Ollama-/Qwen-Anbindung](agent_system/ollama_client.py); regelbasierte Entwürfe funktionieren ohne Modell |
-| **Sichere Freigabe** | [Getrennte Datenmodelle](listings/models.py) für privaten Entwurf, Verkäuferfreigabe und beim Käufer bereitgestellten Textstand |
-| **Asynchrone Verarbeitung** | Optionale [Datenbankwarteschlange](listings/draft_queue.py) und separater Worker |
-| **Tests und Evaluation** | Laut lokalem Nachweisstand vom 27.10.2026 **430 Django- und 281 Agententests bestanden**, LLM für diese automatisierten Tests deaktiviert; [historische Evaluationen](evaluation_reports/) |
+| **Webentwicklung** | Django-Anzeigen, Suche, Eigentümerrechte und Postfächer in [`listings/`](listings/) |
+| **Multi-Agenten-System** | [Orchestrator und Pipeline](agent_system/pipeline.py), [Information-/Preis-/Logistik-Agenten](agent_system/agents.py) |
+| **Lokales KI-Modell** | [Ollama-Client](agent_system/ollama_client.py) mit optionalem Qwen; ohne Ollama regelbasierter Betrieb |
+| **Menschliche Freigabe** | [Datenmodelle](listings/models.py) trennen private Entwürfe, intern freigegebene Texte und bereitgestellte Antwort-Snapshots |
+| **Hintergrundverarbeitung** | Optionale [DB-Queue](listings/draft_queue.py) mit separatem Management-Worker |
+| **Testbarkeit** | [Django-Tests](listings/) und [Agententests](agent_system/tests/); historisch dokumentiert: 430 + 281 erfolgreiche Tests am 27.10.2026, nicht von GitHub-CI bestätigt |
 
-## Einblicke in die Anwendung
+**In zwei Minuten:** [Bilder und Funktionen](#die-anwendung-in-bildern) · [Architektur](docs/architecture.md) · [Tests](docs/testing.md) · [Evaluationsberichte](docs/evaluation/README.md) · [lokaler Start](#lokal-starten)
 
-Die folgenden Screenshots stammen aus dem Ordner [`Docs/`](Docs/). Sie zeigen die lokale Anwendung; eine vollständige manuelle Abnahme, insbesondere mit echtem Ollama, ist noch offen.
+## Die Anwendung in Bildern
 
-| Screenshot | Vorschau |
-| --- | --- |
-| Ansicht 1 | <img src="Docs/127.0.0.1_8000_anzeigen_neu_.png" alt="Fundplatz: Screenshot 1 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 2 | <img src="Docs/Screenshot%202026-11-02%20210821.png" alt="Fundplatz: Screenshot 2 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 3 | <img src="Docs/Screenshot%202026-11-02%20210922.png" alt="Fundplatz: Screenshot 3 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 4 | <img src="Docs/Screenshot%202026-11-02%20210951.png" alt="Fundplatz: Screenshot 4 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 5 | <img src="Docs/Screenshot%202026-11-02%20211006.png" alt="Fundplatz: Screenshot 5 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 6 | <img src="Docs/Screenshot%202026-11-02%20211808.png" alt="Fundplatz: Screenshot 6 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 7 | <img src="Docs/Screenshot%202026-11-02%20211939.png" alt="Fundplatz: Screenshot 7 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 8 | <img src="Docs/Screenshot%202026-11-02%20213733.png" alt="Fundplatz: Screenshot 8 der lokal gestarteten Anwendung" width="540"> |
-| Ansicht 9 | <img src="Docs/Screenshot%202026-11-02%20214620.png" alt="Fundplatz: Screenshot 9 der lokal gestarteten Anwendung" width="540"> |
+Die Aufnahmen stammen vom lokalen Entwicklungsserver und zeigen **verschiedene Zustände und teils unterschiedliche Beispielanfragen**. Sie sind kein Nachweis für eine abgeschlossene manuelle oder produktive Systemabnahme.
 
-> Die Bilder sind als Ansichten nummeriert, weil ihre Dateinamen die gezeigte Funktion nicht eindeutig beschreiben. Es werden keine unbestätigten Bildinhalte behauptet.
+### 1. Startseite – Einstieg in den Marktplatz
 
-## Entwicklungsphasen
+<img src="docs/screenshots/01-startseite.png" width="760" alt="Fundplatz-Startseite mit Suchfeld, Verlinkung zum Anzeigenkatalog und Anzeige aktiver Inserate">
 
-Die früheren Tages-, Phasen- und Fixberichte wurden **vollständig** in drei nach Phasen geordnete Dokumente übernommen. Sie sind als historische Arbeitsnotizen gekennzeichnet, nicht als aktuelle Installationsanleitung.
+Die Startseite erklärt den Marktplatz, bietet eine direkte Produktsuche und führt zur Anzeigenübersicht oder zum Formular für neue Anzeigen. Eine Kennzahl zeigt die derzeit aktiven Inserate.
 
-- **[Phase 1 – Django-Marktplatz und Benutzeroberfläche](docs/phase-1/README.md):** Benutzerkonten, Anzeigen, Suchfunktion, Design, frühere Layoutkorrekturen.
-- **[Phase 2 – Lokales Multi-Agenten-System](docs/phase-2/README.md):** Ollama, Eingaben, Router, drei Agenten, Validierung, Evaluation.
-- **[Phase 3 – Integration und Qualitätssicherung](docs/phase-3/README.md):** Verkäuferworkflow, Freigabe, Worker, Sicherheitschecks, Tests und historische Fixberichte.
+### 2. Verkäuferpostfach – eingegangene Fragen verwalten
 
-## Vorhandene Funktionen
+<img src="docs/screenshots/06-verkaeuferpostfach.png" width="760" alt="Privates Verkäuferpostfach mit Statuskennzahlen, Suchfeld und Statusfilter">
 
-| Bereich | Implementierter Umfang |
-| --- | --- |
-| **Anzeigen** | Erstellen, bearbeiten, aktivieren/deaktivieren und nach Bestätigung löschen; mit Titel, Beschreibung, Preis, Kategorie, Zustand, optionalem Bild, Ort sowie Angaben zu Versand, Abholung und Verhandlungsbasis. |
-| **Katalog** | Öffentliche Übersicht und Detailseiten, Suche in Titel und Beschreibung, Kategorie- und Preisfilter sowie Seitennavigation. |
-| **Benutzerkonten** | Registrierung, Login und Logout; Verwaltung der eigenen Anzeigen. |
-| **Käuferanfragen** | Angemeldete Käufer können Fragen zu fremden aktiven Anzeigen stellen und ihre Anfragen im eigenen Postfach verfolgen. |
-| **Verkäuferpostfach** | Anfragen suchen und nach Status filtern, private Entwürfe einsehen und bearbeiten sowie eine regelbasierte, käuferfreundlichere Formulierung übernehmen. |
-| **Antworten** | Gespeicherte Verkäuferfassung ausdrücklich freigeben und anschließend separat als unveränderlichen Textstand im Käuferpostfach bereitstellen. |
-| **Verarbeitung und Verlauf** | Statusanzeige, Ereignisverlauf, optionale Datenbankwarteschlange mit separatem Worker und ein lesender Befehl zur Datenkonsistenzprüfung. |
+Im privaten Verkäuferpostfach sieht der Anzeigeninhaber seine Kundenfragen, den Verarbeitungsstatus und die erforderlichen nächsten Schritte. Eine Suche und ein Statusfilter helfen bei mehreren Anfragen. **KI-Entwürfe sind nicht automatisch an Käufer versendet.**
 
-Der Ablauf einer Anfrage:
+### 3. Antwortentwurf – Regelbasis und freundlicher Formulierungsvorschlag
+
+<img src="docs/screenshots/07-antwortvorschlaege.png" width="760" alt="Privater technischer Antwortentwurf, käuferfreundlicher Vorschlag und Warnhinweis zur Verkäuferprüfung">
+
+Die Detailansicht zeigt getrennt den ursprünglichen regelbasierten Entwurf und eine käuferfreundlichere Formulierung. Warnungen machen sichtbar, dass Fakten und Preiszusagen vor jeder Freigabe vom Verkäufer geprüft werden müssen. Die abgebildete Testanfrage enthält einen ungewöhnlichen Preisvergleich; der Screenshot belegt keine inhaltliche Korrektheit des Vorschlags.
+
+### 4. Antworteditor – Verkäufer behält die Kontrolle
+
+<img src="docs/screenshots/09-antworteditor.png" width="760" alt="Formular zum privaten Bearbeiten eines Antwortentwurfs mit Kundenfrage und unverändertem ursprünglichen Vorschlag">
+
+Der Verkäufer kann den Text selbst formulieren oder ändern und **nur privat speichern**. Rechts bleiben Käuferfrage und ursprünglicher Vorschlag zum Abgleich sichtbar; das Speichern ist ausdrücklich **keine Veröffentlichung**.
+
+### 5. Käuferpostfach – veröffentlichte Antworten
+
+<img src="docs/screenshots/05-kaeuferpostfach.png" width="760" alt="Meine Anfragen im Käuferpostfach mit den Zuständen Noch keine Antwort und Antwort erhalten">
+
+Käufer verfolgen ihre gestellten Fragen und erkennen, ob eine Verkäuferantwort vorliegt. Nur der ausdrücklich bereitgestellte Text erscheint beim Käufer, nicht der interne KI-Entwurf.
+
+<details>
+<summary><strong>Vier weitere Screenshots ansehen: Suche, Anzeigenverwaltung und Statusverlauf</strong></summary>
+
+### 6. Anzeigenkatalog – Suche und Filter
+
+<img src="docs/screenshots/02-anzeigenkatalog.png" width="760" alt="Alle Anzeigen mit Suchbegriff-, Kategorie- und Preisfiltern sowie Produktkacheln">
+
+Die Katalogseite ermöglicht die Suche nach Produktnamen beziehungsweise Beschreibung und Filter nach Kategorie und Preisbereich. Aktive Anzeigen erscheinen mit Bild, Preis, Kategorie und Ort.
+
+### 7. Anzeige erstellen – Produktkontext erfassen
+
+<img src="docs/screenshots/03-anzeige-erstellen.png" width="760" alt="Formular für eine neue Anzeige mit Produktbeschreibung, Preis, Bild und Versand- und Abholoptionen">
+
+Das Formular sammelt Titel, Beschreibung, Preis, Kategorie, Zustand und optional ein Bild und den Standort. Versand, Abholung und Verhandlungsbasis sind ausdrücklich einstellbar – diese Angaben fließen später in den Kontext für Antwortentwürfe ein.
+
+### 8. Eigene Anzeigen – Verwaltung und Status
+
+<img src="docs/screenshots/04-meine-anzeigen.png" width="760" alt="Verwaltung Meine Anzeigen mit Aktionen Ansehen, Deaktivieren, Bearbeiten und Löschen">
+
+Der Verkäufer verwaltet seine eigenen Inserate, einschließlich deaktivierter Anzeigen. Die Oberfläche bietet Aktionen zum Ansehen, Bearbeiten, Aktivieren beziehungsweise Deaktivieren und Löschen.
+
+### 9. Detailansicht – interner Verlauf und Bearbeitungsstatus
+
+<img src="docs/screenshots/08-statusverlauf.png" width="760" alt="Verkäuferdetailseite mit Vorschlag, privatem Entwurf, Prüfhinweisen, Ereignisprotokoll und Bearbeitungsstatus">
+
+Ein interner Nachrichten- und Statusverlauf zeigt Eingang und Verarbeitung der Anfrage. Der Verkäufer sieht Prüfhinweise, den gewählten Agenten und die weiteren Bearbeitungsschritte. Diese internen Angaben sind vom Käuferpostfach getrennt.
+
+</details>
+
+## Ablauf und Architektur
 
 ```text
-Käuferfrage → privater Antwortentwurf → Verkäufer bearbeitet und speichert
-           → interne Freigabe → separate Bereitstellung im Käuferpostfach
+Käuferfrage → Produktkontext → Routing → Information / Verhandlung / Logistik
+            → Validierung → privater Antwortentwurf
+            → Verkäufer bearbeitet → interne Freigabe
+            → getrennte Bereitstellung im Käuferpostfach
 ```
 
-**Der Verkäufer entscheidet über die Antwort.** Eine Freigabe allein macht sie noch nicht für den Käufer sichtbar. Käufer erhalten nur den bereitgestellten Textstand; interne Entwürfe und Prüfhinweise bleiben im Verkäuferbereich. Die Bereitstellung erfolgt innerhalb von Fundplatz, ohne E-Mail oder externen Nachrichtenversand.
+Die Anwendung nutzt serverseitig gerenderte Django-Templates, SQLite, lokale Bootstrap-Styles und ein separates Python-Modul `agent_system`. Die Übersetzungsschicht [`listings/agent_bridge.py`](listings/agent_bridge.py) hält die Agentenlogik unabhängig von Django. Optional ist ein getrennter Worker für langlaufende LLM-Aufrufe aktivierbar.
 
-## Technischer Aufbau
-
-Fundplatz ist eine serverseitig gerenderte Django-Anwendung. SQLite speichert Benutzer, Anzeigen, Anfragen, Antwortstände und Verlaufsereignisse. Django Templates, lokal eingebundenes Bootstrap-CSS und eigene Styles bilden die Oberfläche; ein kleines JavaScript aktualisiert Seiten während der Entwurfsverarbeitung.
-
-Das Python-Modul `agent_system` ist von Django getrennt. Eine Übersetzungsschicht in `listings/agent_bridge.py` übergibt die Produktdaten und die Käuferfrage an die Pipeline:
-
-1. Eingaben prüfen und die Anfrage einem oder mehreren Bereichen zuordnen.
-2. Spezialisierte Agenten für **Produktinformationen**, **Preisverhandlung** und **Versand/Abholung** ausführen.
-3. Entwürfe anhand von Vorlagen und Risikoregeln prüfen und einen privaten Vorschlag zurückgeben.
-
-Die Basisentwürfe entstehen regelbasiert aus den hinterlegten Daten. Optional unterstützt Ollama das Routing und liefert zusätzliche Formulierungsvorschläge. Freie Modellvorschläge werden nicht automatisch in den zusammengeführten Entwurf übernommen; der Verhandlungsagent verwendet keine freien LLM-Formulierungen. Bei Modellproblemen ist ein gekennzeichneter Regel-Fallback vorgesehen. Diese Prüfungen ersetzen keine inhaltliche Kontrolle durch den Verkäufer.
-
-```text
-config/                      Django-Einstellungen und zentrale URLs
-listings/                    Datenmodelle, Formulare, Views und Berechtigungen
-  agent_bridge.py            Übergang von Django zur Agenten-Pipeline
-  draft_queue.py             Optionale Warteschlange für private Entwürfe
-  management/commands/       Worker und Datenkonsistenzprüfung
-  migrations/                Datenbankschema
-  templates/listings/        Katalog, Anzeigen und Postfächer
-  tests.py, test_*.py         Django-Tests
-agent_system/                Routing, drei Agenten, Validierung und Ollama-Client
-  tests/                     Unittests des Agentensystems
-  examples/                  Vordefinierte Evaluationsszenarien
-templates/                   Basislayout, Login und Registrierung
-static/                      CSS, JavaScript und lokales Bootstrap
-evaluation_reports/          Bereits eingecheckte Szenarioauswertungen
-scripts/tag25_abnahme.ps1    Vorhandenes lokales Prüfskript
-manage.py                    Django-Verwaltungsbefehle
-requirements.txt             Python-Abhängigkeiten
-```
+**Wichtig:** Die Basisantworten werden regelbasiert aus den hinterlegten Produktdaten erstellt. Ollama kann Routing und alternative Formulierungen unterstützen; freie Modelltexte werden nicht automatisch zum verbindlichen Verkäufertext. [Technische Architektur und Grenzen](docs/architecture.md).
 
 ## Lokal starten
 
-Voraussetzungen: **Git und Python 3.12**. Für den Standardbetrieb ist Ollama nicht erforderlich. Die folgenden Befehle sind für Windows PowerShell gedacht und benötigen keine Aktivierung der virtuellen Umgebung.
+**Voraussetzungen:** Git und Python 3.12. Für den Standardbetrieb ist Ollama **nicht** nötig.
 
 ```powershell
 git clone https://github.com/NabinAd/Fundplatz.git
@@ -109,82 +106,19 @@ python -m venv .venv
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-Danach [http://127.0.0.1:8000/](http://127.0.0.1:8000/) öffnen. Die Datenbank wird lokal angelegt; Anzeigen und Konten müssen selbst erstellt werden. Registrierung: `/registrieren/`, eigene Anzeigen: `/meine-anzeigen/`, Verkäuferpostfach: `/anfragen/`, Käuferpostfach: `/meine-anfragen/`.
+Anschließend `http://127.0.0.1:8000/` öffnen. Testbenutzer und Anzeigen werden lokal selbst erstellt. Für Linux/macOS statt `.\.venv\Scripts\python.exe` den Pfad `.venv/bin/python` verwenden und die virtuelle Umgebung mit `python3.12 -m venv .venv` anlegen.
 
-Für die optionale Django-Adminoberfläche unter `/admin/`:
+**Optional lokales Modell:** Ollama unter `http://127.0.0.1:11434` starten und `ollama pull qwen3:4b-instruct` ausführen. Für die synchrone Modellnutzung `FUNDPLATZ_AGENT_USE_LLM=1` vor dem Webserverstart setzen. Für die optionale Queue zusätzlich `FUNDPLATZ_AGENT_ASYNC=1` im Webserverprozess und `FUNDPLATZ_AGENT_USE_LLM=1` im getrennten Workerprozess setzen; den Worker mit `python manage.py process_inquiries --loop` starten. Unter PowerShell Variablen als `$env:NAME="1"` setzen. Ohne Worker bleiben Jobs in `queued`.
 
-```powershell
-.\.venv\Scripts\python.exe manage.py createsuperuser
-```
+### Ablauf selbst prüfen
 
-<details>
-<summary>Start unter Linux oder macOS</summary>
+1. Verkäufer registrieren, Anzeige erstellen; in zweitem Browserprofil ein Käuferkonto anlegen.
+2. Als Käufer eine Frage zur fremden Anzeige stellen.
+3. Im Verkäuferpostfach Entwurf und Fakten kontrollieren, gegebenenfalls bearbeiten und privat speichern.
+4. Antwort **intern freigeben**; die Käuferansicht darf sie noch nicht zeigen.
+5. Anschließend **separat bereitstellen** und im Käuferpostfach prüfen.
 
-Mit installiertem Python 3.12:
-
-```bash
-git clone https://github.com/NabinAd/Fundplatz.git
-cd Fundplatz
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py runserver
-```
-
-Bei den weiteren Befehlen `.\.venv\Scripts\python.exe` durch `.venv/bin/python` ersetzen. Die unten gezeigten Umgebungsvariablen werden in diesen Shells mit `export NAME=WERT` gesetzt.
-
-</details>
-
-### Den Anfrageablauf ausprobieren
-
-1. Ein Verkäuferkonto anlegen und eine aktive Anzeige erstellen.
-2. In einem zweiten Browserprofil ein anderes Konto als Käufer registrieren und eine Frage zur Anzeige stellen.
-3. Als Verkäufer unter **Anfragen** den privaten Entwurf prüfen, bearbeiten und als Verkäuferfassung speichern.
-4. Diese Fassung ausdrücklich intern freigeben. Im Käuferpostfach darf weiterhin keine Antwort erscheinen.
-5. Die Antwort separat bereitstellen und als Käufer den veröffentlichten Text prüfen.
-
-Für die Prüfung der Trennung zwischen verschiedenen Verkäufern ein weiteres Verkäuferkonto mit eigener Anzeige verwenden.
-
-<details>
-<summary>Optional: Ollama und Hintergrundverarbeitung</summary>
-
-Der Standardbetrieb verwendet `FUNDPLATZ_AGENT_USE_LLM=0` und `FUNDPLATZ_AGENT_ASYNC=0`: Die Entwurfsverarbeitung läuft synchron und regelbasiert.
-
-Für Modellnutzung muss Ollama lokal unter `http://127.0.0.1:11434` laufen. Das im Code voreingestellte Modell herunterladen:
-
-```powershell
-ollama pull qwen3:4b-instruct
-```
-
-Falls der Ollama-Dienst noch nicht läuft, diesen mit `ollama serve` in einem eigenen Terminal starten. Die optionale Warteschlange hält die Modellverarbeitung aus der Webanfrage heraus. Dafür im Repository zwei Terminals verwenden:
-
-**Terminal A – Webserver:**
-
-```powershell
-$env:FUNDPLATZ_AGENT_ASYNC="1"
-.\.venv\Scripts\python.exe manage.py runserver
-```
-
-**Terminal B – Worker:**
-
-```powershell
-$env:FUNDPLATZ_AGENT_USE_LLM="1"
-$env:OLLAMA_MODEL="qwen3:4b-instruct"
-$env:OLLAMA_TIMEOUT_SECONDS="45"
-.\.venv\Scripts\python.exe manage.py process_inquiries --loop
-```
-
-Ohne laufenden Worker bleiben eingereihte Anfragen im Status `queued`. Der Worker liest `FUNDPLATZ_AGENT_USE_LLM` aus seiner eigenen Umgebung. Ohne diese Aktivierung verarbeitet er die Queue regelbasiert. Das Ollama-Zeitlimit gilt pro HTTP-Aufruf, nicht für den gesamten Ablauf.
-
-Die Einstellungen werden beim Prozessstart gelesen. Für den synchronen Modellbetrieb `FUNDPLATZ_AGENT_ASYNC="0"` und `FUNDPLATZ_AGENT_USE_LLM="1"` im Webserver-Terminal setzen und den Server neu starten. Eine `.env`-Datei wird vom vorhandenen Code nicht automatisch geladen.
-
-</details>
-
-## Tests und Überprüfung
-
-Vorhanden sind Django-Tests für Anzeigen, Formulare, Suche, Eigentümerrechte, Anfrageverarbeitung, Postfächer, Freigabe, Antwortbereitstellung, Verlauf und Queue. Die separaten Python-Unittests prüfen Eingaben, Routing, Agenten, Validierung, Fehlerfälle und die Evaluationslogik. Modellaufrufe werden in den entsprechenden Tests durch simulierte Antworten ersetzt; ein bestandener Testlauf belegt keine echte Ollama-Integration.
-
-Nach der Installation im Repository ausführen:
+## Tests, Qualitätsnachweise und Projektstand
 
 ```powershell
 $env:FUNDPLATZ_AGENT_USE_LLM="0"
@@ -196,59 +130,22 @@ $env:FUNDPLATZ_AGENT_ASYNC="0"
 .\.venv\Scripts\python.exe manage.py fundplatz_audit --strict --json
 ```
 
-`fundplatz_audit` liest die lokale Datenbank und prüft unter anderem Freigaben, Antwort-Snapshots und die Sichtbarkeit von Verlaufsereignissen. Ein fehlerfreier Audit einer leeren Datenbank bestätigt keinen durchgespielten Anfrageablauf.
+**Dokumentierter älterer Nachweis (27. Oktober 2026, Commit [`274086d`](https://github.com/NabinAd/Fundplatz/commit/274086d598af84f2b49684987ae16ca4f6f5d922)):** Django-Systemprüfung, Migrationen, 430 Django-Tests und 281 Agententests unter Windows/Python 3.12.10 erfolgreich; LLM und Async-Modus waren für diese Testläufe ausgeschaltet. Ein unabhängiger neuer Testlauf wurde im Zuge dieser Dokumentationsüberarbeitung **nicht durchgeführt**. Der manuelle Ende-zu-Ende-Durchlauf mit echtem Qwen war zuletzt nicht vollständig abgenommen.
 
-### Nachweisstand
+- [Teststrategie, Testbefehle und offene Abnahme](docs/testing.md)
+- [Szenarioauswertung einschließlich Aussagegrenzen](docs/evaluation/README.md)
+- [Entwicklungsverlauf und frühere Korrekturen](docs/development-history/README.md)
 
-Am **27. Oktober 2026** am [Code-Stand `274086d`](https://github.com/NabinAd/Fundplatz/commit/274086d598af84f2b49684987ae16ca4f6f5d922) unter **Windows mit Python 3.12.10** geprüft. Modellnutzung und Async-Modus waren für die automatisierten Läufe deaktiviert.
+## Einschränkungen und Sicherheit
 
-| Prüfung | Ergebnis |
-| --- | --- |
-| Django-Systemprüfung | Ohne Befunde. |
-| Migrationsabgleich | Keine ausstehenden Modelländerungen erkannt. |
-| Migrationen auf frischer lokaler Datenbank | Erfolgreich angewendet. |
-| Django-Tests | **430 Tests erfolgreich.** |
-| Separate Agententests | **281 Tests erfolgreich.** |
-| Strenger Datenbank-Audit | Auf der frisch angelegten, leeren Datenbank ohne Inkonsistenzen. |
+Fundplatz ist ein **lokaler Lernprototyp**, kein produktiv abgesicherter Marktplatz. Die vorhandene Konfiguration nutzt `DEBUG=True`, lokale Hosts, einen Entwicklungs-Secret-Key-Fallback und SQLite. Es gibt keinen externen Nachrichtenversand, keine Zahlungsabwicklung und keinen produktiven Echtzeit-Chat. Berechtigungstests und einfache Validierungsregeln ersetzen weder Penetrationstests noch eine vollständige DSGVO-Prüfung. Vor einem öffentlichen Deployment wären unter anderem Secrets, HTTPS, Härtung, Backup, Monitoring und Lasttests erforderlich. Bei fehlenden Produktdaten oder LLM-Ausfall muss der Verkäufer selbst prüfen.
 
-Ein manueller Browserdurchlauf, echte Ollama-Aufrufe und der Start unter Linux/macOS wurden bei dieser Prüfung nicht durchgeführt. Die [bestehende Abnahmecheckliste](docs/phase-3/README.md) führt die praktische Gesamtabnahme weiterhin als offen. Automatisierte Prüfungen, historische Szenarioberichte und ein manueller Browserdurchlauf sind unterschiedliche Nachweise.
+## Repository-Orientierung
 
-<details>
-<summary>Szenarioauswertungen und vorhandenes Prüfskript</summary>
+- [`listings/`](listings/) – Django-Modelle, Formulare, Views, Berechtigungen und Tests
+- [`agent_system/`](agent_system/) – Eingaben, Orchestrator, drei Agenten, Validierung, Ollama und Agententests
+- [`config/`](config/) – Django-Einstellungen und URL-Konfiguration
+- [`static/`](static/) und [`templates/`](templates/) – Darstellung, Bootstrap, HTML und JavaScript
+- [`scripts/`](scripts/) – lokales Abnahmeskript
+- [`docs/`](docs/) – Architektur, Testdokumentation, Screenshots, historische Evaluationen und zusammengefasste Entwicklungsschritte
 
-Unter [`evaluation_reports/`](evaluation_reports/) liegen historische Offline- und LLM-Berichte. Sie prüfen vordefinierte Erwartungen an Routing, Stichwörter, Zahlen und Risikomuster. Die zusätzlichen Tag-15-Fälle wurden bereits zur Verbesserung verwendet und sind kein unabhängiger Blindtest. Die Berichte belegen weder allgemeine Antwortqualität noch Fehlerfreiheit bei beliebigen Fragen.
-
-Eine eigene Offline-Auswertung mit neuem Ausgabeordner starten:
-
-```powershell
-.\.venv\Scripts\python.exe -m agent_system.evaluation --mode offline --out-dir tag25_reports/local_offline
-```
-
-Mit laufendem Ollama ist eine kleine Modellstichprobe möglich:
-
-```powershell
-.\.venv\Scripts\python.exe -m agent_system.evaluation --mode llm --per-category 1 --out-dir tag25_reports/local_llm
-```
-
-Das Programm schreibt Markdown-, JSON- und CSV-Berichte. Qualitätsabweichungen stehen im Bericht; der Exitcode allein zeigt sie nicht an. Neue Auswertungen in einem eigenen Ausgabeordner ablegen, damit bestehende Berichte erhalten bleiben.
-
-Das vorhandene [`scripts/tag25_abnahme.ps1`](scripts/tag25_abnahme.ps1) bündelt Django-Prüfungen, Agententests und Datenbank-Audit. Es erwartet `python` aus einer aktivierten virtuellen Umgebung und schreibt lokale Protokolle nach `tag25_reports/`. Diese Protokolle gehören nicht ins öffentliche Repository.
-
-</details>
-
-## Projektgrenzen und dokumentierte nächste Schritte
-
-Fundplatz ist ein **lokales Lernprojekt mit begrenztem Funktionsumfang**. Die Konfiguration enthält `DEBUG=True`, einen Entwicklungs-Secret-Key als Fallback, lokale Hosts und SQLite. Der Entwicklungsserver und die optionale lokale Queue sind keine fertig eingerichtete Produktionsumgebung.
-
-- **Antwortqualität:** Regeln können unvollständige oder falsche Produktdaten nicht verlässlich erkennen. Auch ein Modellvorschlag braucht eine manuelle Prüfung. Das System trifft keine autonomen Preiszusagen.
-- **Funktionsumfang:** Kein Bezahlsystem, kein externer Nachrichtenversand und kein fortlaufender Echtzeit-Chat.
-- **Lokale Daten:** Die Queue verwendet Produktdaten zum Verarbeitungszeitpunkt. Beim Löschen einer Anzeige werden zugehörige Bilddateien nicht automatisch vom Datenträger entfernt.
-- **Prüfgrenzen:** Automatisierte Tests ersetzen keine Browser-, Last-, Sicherheits- oder Backup-Wiederherstellungsprüfung.
-
-Die aktuellen nächsten Schritte sind in [`PHASE3_TAG25.md`](docs/phase-3/README.md) und [`FUNDPLATZ_ABNAHME.md`](docs/phase-3/README.md) dokumentiert:
-
-1. Die lokale Gesamtabnahme einschließlich getrennter Käufer-/Verkäuferkonten, echter Ollama-Verarbeitung im Browser und Ausfallverhalten abschließen.
-2. Vor einem öffentlichen Betrieb Deployment-Einstellungen, Secrets, HTTPS und Cookies härten sowie Hosting, Backups, Wiederherstellung und Monitoring klären.
-3. Für einen größeren Betrieb Datenbank und Worker-/Queue-Verwaltung ausbauen, Missbrauchsschutz verbessern und Datenschutz sowie rechtliche Anforderungen prüfen.
-
-Diese Punkte sind offene Arbeiten, keine zugesagten Funktionen oder abgeschlossenen Nachweise.

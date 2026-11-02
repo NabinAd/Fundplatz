@@ -22,7 +22,7 @@ from .router import AGENTS
 from .validation import DRAFT_BLOCK, _COMMITMENT, _NUMBERS, _UNAUTHORIZED_DELIVERY
 
 DEFAULT_CASES = Path(__file__).resolve().parent / "examples" / "tag14_scenarios.json"
-DEFAULT_REPORT_DIR = Path("evaluation_reports") / "tag14_offline"
+DEFAULT_REPORT_DIR = Path("docs") / "evaluation" / "local-reports" / "tag14_offline"
 
 
 class EvaluationDataError(ValueError):
@@ -284,7 +284,7 @@ def main(argv: list[str] | None = None) -> int:
         if not 1 <= args.limit <= len(scenarios):
             parser.error(f"--limit muss zwischen 1 und {len(scenarios)} liegen.")
         scenarios = scenarios[:args.limit]
-    target = args.out_dir or Path("evaluation_reports") / ("tag14_llm" if args.mode == "llm" else "tag14_offline")
+    target = args.out_dir or Path("docs") / "evaluation" / "local-reports" / ("tag14_llm" if args.mode == "llm" else "tag14_offline")
     print(f"Starte {len(scenarios)} Szenarien, Modus: {args.mode}.", flush=True)
     report = run_suite(base, scenarios, offline=args.mode == "offline")
     write_report(report, target)

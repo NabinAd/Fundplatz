@@ -19,6 +19,5 @@ Thumbs.db
 /tag25_reports/
 *.log
 
-/db_backup*.sqlite3
-/tag25_reports/
-*.log
+# Lokal neu erzeugte Evaluationsberichte (historische Berichte unter docs/evaluation/reports/ bleiben versioniert)
+/docs/evaluation/local-*/

@@ -5,8 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
-BEFORE = Path("evaluation_reports/tag15_before/report.json")
-AFTER = Path("evaluation_reports/tag15_after/report.json")
+BEFORE = Path("docs/evaluation/reports/tag15_before/report.json")
+AFTER = Path("docs/evaluation/reports/tag15_after/report.json")
 
 
 def load_summary(path: Path) -> dict:
