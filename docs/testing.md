@@ -1,6 +1,6 @@
 # Tests, Nachweise und offene Abnahme
 
-[← Projektübersicht](../README.md) · [Architektur](architecture.md) · [Evaluation](evaluation/README.md)
+[← Projektübersicht](../README.md) · [Architektur](../architecktur.md) · [Evaluation](evaluation/README.md)
 
 ## Testarten und Aussagegrenzen
 

@@ -1,8 +1,8 @@
 # Entwicklung von Fundplatz – zusammengefasster Verlauf
 
-[← Zur Projektübersicht](../../README.md) · [Architektur](../architecture.md) · [Tests](../testing.md)
+[← Zur Projektübersicht](../../README.md) · [Architektur](../../architecktur.md) · [Tests](../testing.md)
 
-Dieser Ordner **fasst die alten Tages- und Fixdokumente inhaltlich zusammen**, statt sie unverändert hintereinanderzukopieren. Er dokumentiert die wesentlichen Schritte und Entscheidungen. **Verbindlich für Installation und aktuelle Funktionen** sind die [Haupt-README](../../README.md), die [Architektur](../architecture.md) und der aktuelle Code.
+Dieser Ordner **fasst die alten Tages- und Fixdokumente inhaltlich zusammen**, statt sie unverändert hintereinanderzukopieren. Er dokumentiert die wesentlichen Schritte und Entscheidungen. **Verbindlich für Installation und aktuelle Funktionen** sind die [Haupt-README](../../README.md), die [Architektur](../../architecktur.md) und der aktuelle Code.
 
 ## Phase 1 – Web-Marktplatz (Tage 1–5)
 

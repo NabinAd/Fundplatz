@@ -1,6 +1,6 @@
 # Historische Agenten-Evaluationen
 
-[← Projektübersicht](../../README.md) · [Teststrategie](../testing.md) · [Agentenarchitektur](../architecture.md)
+[← Projektübersicht](../../README.md) · [Teststrategie](../testing.md) · [Agentenarchitektur](../../architecktur.md)
 
 ## Methode
 

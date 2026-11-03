@@ -1,6 +1,6 @@
 # Ist-/Soll-Situation: Wiederkehrende Käuferanfragen effizient beantworten
 
-[← Projektübersicht](../README.md) · [Agentenarchitektur](../AGENTS.md) · [Technische Architektur](architecture.md)
+[← Projektübersicht](../README.md) · [System- und Agentenarchitektur](../architecktur.md)
 
 ## 1. Ausgangslage (hypothetisches Szenario)
 
@@ -87,6 +87,6 @@ Laut [Kleinanzeigen-Nutzungsbedingungen, § 5](https://themen.kleinanzeigen.de/n
 
 ## 9. Umsetzung und Nachweise
 
-Die technische Umsetzung ist in [AGENTS.md](../AGENTS.md) grafisch erklärt; die [Architekturdokumentation](architecture.md) beschreibt die Module und Datenmodelle. [Tests und Abnahme](testing.md) trennen automatisierte Prüfungen vom noch offenen vollständigen manuellen Ende-zu-Ende-Test.
+Die [zusammengefasste System- und Agentenarchitektur](../architecktur.md) erläutert Diagramme, Module und Datenmodelle. [Tests und Abnahme](testing.md) trennen automatisierte Prüfungen vom noch offenen vollständigen manuellen Ende-zu-Ende-Test.
 
 **Kernaussage:** Fundplatz soll die wiederholte Formulierungsarbeit reduzieren, ohne die Entscheidung über Preis, Fakten oder Veröffentlichung an eine autonome KI abzugeben.

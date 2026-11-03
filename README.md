@@ -4,7 +4,7 @@
 
 **Entwickler:** Nabin Adhikari · Wirtschaftsinformatik (THM) · persönliches Lernprojekt für Python, Webentwicklung, lokales KI-Routing und Softwaretests · auf der Suche nach einem Pflichtpraktikum.
 
-**Projekt lesen:** [Agentenarchitektur mit Diagrammen](AGENTS.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Screenshots](#die-anwendung-in-bildern) · [Tests](docs/testing.md)
+**Projekt lesen:** [Agentenarchitektur mit Diagrammen](architecktur.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Screenshots](#die-anwendung-in-bildern) · [Tests](docs/testing.md)
 
 ## Warum Fundplatz?
 
@@ -25,7 +25,7 @@ Für einen Überblick über die manuelle **Ist-Situation**, den gewünschten **S
 | **Hintergrundverarbeitung** | Optionale [DB-Queue](listings/draft_queue.py) mit separatem Management-Worker |
 | **Testbarkeit** | [Django-Tests](listings/) und [Agententests](agent_system/tests/); historisch dokumentiert: 430 + 281 erfolgreiche Tests am 27.10.2026, nicht von GitHub-CI bestätigt |
 
-**In zwei Minuten:** [Agentensystem als Diagramm](AGENTS.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Bilder und Funktionen](#die-anwendung-in-bildern) · [technische Architektur](docs/architecture.md) · [Tests](docs/testing.md) · [Evaluation](docs/evaluation/README.md) · [lokaler Start](#lokal-starten)
+**In zwei Minuten:** [System- und Agentenarchitektur](architecktur.md) · [Ist-/Soll-Situation](docs/ist-soll-situation.md) · [Bilder und Funktionen](#die-anwendung-in-bildern) · [Tests](docs/testing.md) · [Evaluation](docs/evaluation/README.md) · [lokaler Start](#lokal-starten)
 
 ## Die Anwendung in Bildern
 
@@ -92,7 +92,7 @@ Ein interner Nachrichten- und Statusverlauf zeigt Eingang und Verarbeitung der A
 
 ## Ablauf und Architektur
 
-**[Alle Architekturdiagramme in AGENTS.md öffnen](AGENTS.md)** – enthält den Router, die drei Agenten, Eingabeprüfung, optionales lokales Ollama, Validierung und die Human-in-the-Loop-Freigabe als grafische Ablauf- und Sequenzdiagramme.
+**[System- und Agentenarchitektur mit Diagrammen öffnen](architecktur.md)** – enthält den Router, die drei Agenten, Eingabeprüfung, optionales lokales Ollama, Validierung und die Human-in-the-Loop-Freigabe als grafische Ablauf- und Sequenzdiagramme.
 
 ```text
 Käuferfrage → Produktkontext → Routing → Information / Verhandlung / Logistik
@@ -103,7 +103,7 @@ Käuferfrage → Produktkontext → Routing → Information / Verhandlung / Logi
 
 Die Anwendung nutzt serverseitig gerenderte Django-Templates, SQLite, lokale Bootstrap-Styles und ein separates Python-Modul `agent_system`. Die Übersetzungsschicht [`listings/agent_bridge.py`](listings/agent_bridge.py) hält die Agentenlogik unabhängig von Django. Optional ist ein getrennter Worker für langlaufende LLM-Aufrufe aktivierbar.
 
-**Wichtig:** Die Basisantworten werden regelbasiert aus den hinterlegten Produktdaten erstellt. Ollama kann Routing und alternative Formulierungen unterstützen; freie Modelltexte werden nicht automatisch zum verbindlichen Verkäufertext. [Technische Architektur und Grenzen](docs/architecture.md).
+**Wichtig:** Die Basisantworten werden regelbasiert aus den hinterlegten Produktdaten erstellt. Ollama kann Routing und alternative Formulierungen unterstützen; freie Modelltexte werden nicht automatisch zum verbindlichen Verkäufertext. [Technische Architektur und Grenzen](architecktur.md).
 
 ## Lokal starten
 
@@ -152,7 +152,7 @@ $env:FUNDPLATZ_AGENT_ASYNC="0"
 
 Fundplatz ist ein **lokaler Lernprototyp**, kein produktiv abgesicherter Marktplatz. Die vorhandene Konfiguration nutzt `DEBUG=True`, lokale Hosts, einen Entwicklungs-Secret-Key-Fallback und SQLite. Es gibt keinen externen Nachrichtenversand, keine Zahlungsabwicklung und keinen produktiven Echtzeit-Chat. Berechtigungstests und einfache Validierungsregeln ersetzen weder Penetrationstests noch eine vollständige DSGVO-Prüfung. Vor einem öffentlichen Deployment wären unter anderem Secrets, HTTPS, Härtung, Backup, Monitoring und Lasttests erforderlich. Bei fehlenden Produktdaten oder LLM-Ausfall muss der Verkäufer selbst prüfen.
 
-**Lokale Modellnutzung:** Der Standardbetrieb verwendet Regeln ohne externe KI-API; Ollama/Qwen ist optional und kann lokal laufen. Das vermeidet eine verpflichtende Cloud-LLM-API, ist aber **keine pauschale Datenschutzgarantie** und verursacht gegebenenfalls Kosten für Hardware und Strom. Details in [AGENTS.md](AGENTS.md).
+**Lokale Modellnutzung:** Der Standardbetrieb verwendet Regeln ohne externe KI-API; Ollama/Qwen ist optional und kann lokal laufen. Das vermeidet eine verpflichtende Cloud-LLM-API, ist aber **keine pauschale Datenschutzgarantie** und verursacht gegebenenfalls Kosten für Hardware und Strom. Details in [architecktur.md](architecktur.md).
 
 **Kleinanzeigen-Bezug:** Die Idee wurde von typischen Kleinanzeigen-Nachrichten inspiriert, die aktuelle Anwendung ist **keine offizielle Kleinanzeigen-Integration**. Es gibt weder automatisches Einlesen noch externen Versand. Die [Kleinanzeigen-Nutzungsbedingungen](https://themen.kleinanzeigen.de/nutzungsbedingungen/) beschränken in § 5 automatisierte Zugriffs- und Sammelmechanismen ohne ausdrückliche schriftliche Zustimmung. Vor einer späteren Integration müssten Erlaubnis, Plattformregeln und Datenschutz gesondert geprüft werden; Human-in-the-Loop allein bedeutet **keine garantierte AGB-Konformität**.
 
@@ -163,7 +163,7 @@ Fundplatz ist ein **lokaler Lernprototyp**, kein produktiv abgesicherter Marktpl
 - [`config/`](config/) – Django-Einstellungen und URL-Konfiguration
 - [`static/`](static/) und [`templates/`](templates/) – Darstellung, Bootstrap, HTML und JavaScript
 - [`scripts/`](scripts/) – lokales Abnahmeskript
-- [`AGENTS.md`](AGENTS.md) – grafische Multi-Agenten-Architektur und Human-in-the-Loop
+- [`architecktur.md`](architecktur.md) – grafische Multi-Agenten-Architektur und Human-in-the-Loop
 - [`docs/ist-soll-situation.md`](docs/ist-soll-situation.md) – hypothetische Anwendungsfälle, Nutzen und Grenzen
 - [`docs/`](docs/) – technische Architektur, Tests, Screenshots, historische Evaluationen und Entwicklungsschritte
 

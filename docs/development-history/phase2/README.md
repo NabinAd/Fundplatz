@@ -1,6 +1,6 @@
 # Phase 2 – Multi-Agenten-System (Tage 6–15)
 
-[← Entwicklungsgeschichte](../README.md) · [Architektur](../../architecture.md) · [Evaluation](../../evaluation/README.md)
+[← Entwicklungsgeschichte](../README.md) · [Architektur](../../../architecktur.md) · [Evaluation](../../evaluation/README.md)
 
 ## Ziel und Ergebnis
 

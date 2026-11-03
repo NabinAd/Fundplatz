@@ -1,6 +1,6 @@
 # Phase 3 – Website-Integration und Abnahme (Tage 16–25)
 
-[← Entwicklungsgeschichte](../README.md) · [Architektur](../../architecture.md) · [Testing](../../testing.md)
+[← Entwicklungsgeschichte](../README.md) · [Architektur](../../../architecktur.md) · [Testing](../../testing.md)
 
 ## Ziel und Ergebnis
 
